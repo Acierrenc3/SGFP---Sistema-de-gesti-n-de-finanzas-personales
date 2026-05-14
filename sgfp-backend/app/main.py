@@ -16,6 +16,7 @@ from app.api.endpoints import (
 from app.core.configuracion import configuracion
 from app.db.base import Base
 from app.db.sesion import motor
+from app.api.endpoints import usuarios
 
 # Crea todas las tablas en la base de datos al arrancar
 # En producción se usará Alembic para las migraciones
@@ -80,6 +81,11 @@ app.include_router(
     exportar.enrutador,
     prefix="/exportar",
     tags=["Exportar"]
+)
+app.include_router(
+    usuarios.enrutador,
+    prefix="/usuarios",
+    tags=["Usuarios"]
 )
 
 
