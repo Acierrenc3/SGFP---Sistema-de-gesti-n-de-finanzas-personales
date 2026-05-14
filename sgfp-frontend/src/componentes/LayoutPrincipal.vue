@@ -1,61 +1,79 @@
-<!-- Layout principal de la aplicación con barra lateral -->
-<!-- Basado en: https://primevue.org/drawer/ -->
+<!-- Layout principal con barra lateral Glassmorphism -->
 
 <template>
-  <div class="min-h-screen flex">
+  <div class="min-h-screen flex" style="background: var(--gradiente-fondo)">
+    <!-- Círculos decorativos de fondo -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-10"
+        style="background: radial-gradient(circle, #e040fb, transparent)" />
+      <div class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-10"
+        style="background: radial-gradient(circle, #00b4d8, transparent)" />
+    </div>
+
     <!-- Barra lateral -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside class="w-64 flex flex-col fixed h-full z-20"
+      style="background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); border-right: 1px solid rgba(255,255,255,0.1)">
       <!-- Logo -->
-      <div class="p-6 border-b border-gray-200">
-        <h1 class="text-2xl font-bold text-primary-600">SGFP</h1>
-        <p class="text-xs text-gray-400 mt-1">Finanzas Personales</p>
+      <div class="p-6 mb-2" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
+            <i class="pi pi-wallet text-white text-lg" />
+          </div>
+          <div>
+            <h1 class="text-xl font-bold texto-glass">SGFP</h1>
+            <p class="text-xs texto-glass-suave">Finanzas Personales</p>
+          </div>
+        </div>
       </div>
 
       <!-- Menú de navegación -->
-      <nav class="flex-1 p-4">
+      <nav class="flex-1 p-4 overflow-y-auto">
         <ul class="flex flex-col gap-1">
           <li v-for="item in menuItems" :key="item.ruta">
             <RouterLink
               :to="item.ruta"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-              :class="{ 'bg-primary-50 text-primary-600 font-medium': esRutaActiva(item.ruta) }"
+              class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all texto-glass-suave hover:texto-glass group"
+              :class="esRutaActiva(item.ruta)
+                ? 'text-white font-medium'
+                : 'hover:bg-white/10'"
+              :style="esRutaActiva(item.ruta)
+                ? 'background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(0,180,216,0.5)); border: 1px solid rgba(255,255,255,0.15)'
+                : ''"
             >
               <i :class="item.icono" class="text-lg" />
-              <span>{{ item.etiqueta }}</span>
+              <span class="text-sm">{{ item.etiqueta }}</span>
             </RouterLink>
           </li>
         </ul>
       </nav>
 
       <!-- Información del usuario -->
-      <div class="p-4 border-t border-gray-200">
-        <div class="flex items-center gap-3 px-4 py-3">
-          <Avatar
-            :label="inicialUsuario"
-            shape="circle"
-            class="bg-primary-100 text-primary-600"
-          />
+      <div class="p-4" style="border-top: 1px solid rgba(255,255,255,0.1)">
+        <div class="flex items-center gap-3 px-2 py-2 mb-2">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
+            {{ inicialUsuario }}
+          </div>
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-sm truncate">{{ autenticacion.usuario?.nombre }}</p>
-            <p class="text-xs text-gray-400 truncate">{{ autenticacion.usuario?.email }}</p>
+            <p class="font-medium text-sm texto-glass truncate">{{ autenticacion.usuario?.nombre }}</p>
+            <p class="text-xs texto-glass-suave truncate">{{ autenticacion.usuario?.email }}</p>
           </div>
         </div>
 
         <!-- Botón cerrar sesión -->
-        <Button
-          label="Cerrar sesión"
-          icon="pi pi-sign-out"
-          severity="secondary"
-          text
-          fluid
+        <button
           @click="cerrarSesion"
-          class="mt-2"
-        />
+          class="w-full flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all texto-glass-suave hover:text-red-400 hover:bg-red-400/10"
+        >
+          <i class="pi pi-sign-out" />
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </aside>
 
     <!-- Contenido principal -->
-    <main class="flex-1 bg-gray-50 overflow-auto">
+    <main class="flex-1 ml-64 relative z-10 overflow-auto min-h-screen">
       <slot />
     </main>
   </div>
@@ -65,8 +83,6 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import Avatar from 'primevue/avatar'
-import Button from 'primevue/button'
 import { useAutenticacionStore } from '../stores/autenticacion'
 
 const ruta = useRoute()
@@ -74,7 +90,6 @@ const enrutador = useRouter()
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
 
-// Elementos del menú de navegación
 const menuItems = [
   { etiqueta: 'Dashboard', ruta: '/dashboard', icono: 'pi pi-home' },
   { etiqueta: 'Transacciones', ruta: '/transacciones', icono: 'pi pi-arrow-right-arrow-left' },
@@ -84,24 +99,17 @@ const menuItems = [
   { etiqueta: 'Perfil', ruta: '/perfil', icono: 'pi pi-user' }
 ]
 
-// Inicial del nombre del usuario para el avatar
 const inicialUsuario = computed(() => {
   return autenticacion.usuario?.nombre?.charAt(0).toUpperCase() || 'U'
 })
 
-// Comprueba si la ruta actual coincide con la del menú
 function esRutaActiva(rutaItem) {
   return ruta.path === rutaItem
 }
 
 function cerrarSesion() {
   autenticacion.cerrarSesion()
-  toast.add({
-    severity: 'info',
-    summary: 'Sesión cerrada',
-    detail: 'Has cerrado sesión correctamente',
-    life: 3000
-  })
+  toast.add({ severity: 'info', summary: 'Sesión cerrada', detail: 'Has cerrado sesión correctamente', life: 3000 })
   enrutador.push({ name: 'InicioSesion' })
 }
 </script>

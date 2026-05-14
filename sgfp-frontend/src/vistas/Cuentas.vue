@@ -1,140 +1,213 @@
-<!-- Vista de cuentas con listado y CRUD -->
-<!-- Basado en: https://primevue.org/datatable/ -->
+<!-- Vista de cuentas con estilo Glassmorphism -->
 
 <template>
   <LayoutPrincipal>
     <div class="p-6">
       <!-- Cabecera -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-8">
         <div>
-          <h2 class="text-2xl font-bold text-gray-800">Cuentas</h2>
-          <p class="text-gray-500">Gestiona tus fuentes de dinero</p>
+          <h2 class="text-2xl font-bold texto-glass">Cuentas</h2>
+          <p class="texto-glass-suave text-sm mt-1">Gestiona tus fuentes de dinero</p>
         </div>
-        <Button
-          label="Nueva cuenta"
-          icon="pi pi-plus"
+        <button
           @click="abrirDialogo()"
-        />
+          class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 active:scale-95"
+          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+        >
+          <i class="pi pi-plus" />
+          Nueva cuenta
+        </button>
       </div>
 
-      <!-- Tarjetas de cuentas -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card
+      <!-- Grid de cuentas -->
+      <div v-if="cargando" class="flex justify-center py-12">
+        <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
+      </div>
+
+      <div v-else-if="cuentas.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave">
+        <i class="pi pi-credit-card text-4xl mb-2 opacity-30" />
+        <p class="text-sm mb-4">No hay cuentas registradas</p>
+        <button
+          @click="abrirDialogo()"
+          class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90"
+          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+        >
+          <i class="pi pi-plus" />
+          Crear primera cuenta
+        </button>
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
           v-for="cuenta in cuentas"
           :key="cuenta.id"
-          class="border-l-4 border-primary-500"
+          class="glass p-6 group"
         >
-          <template #content>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500">{{ obtenerEtiquetaTipo(cuenta.tipo) }}</p>
-                <p class="text-xl font-bold text-gray-800">{{ cuenta.nombre }}</p>
-                <p class="text-lg font-semibold text-primary-600 mt-1">
-                  {{ formatearMoneda(cuenta.saldo_inicial) }}
-                </p>
-              </div>
-              <i :class="obtenerIconoTipo(cuenta.tipo)" class="text-4xl text-primary-300" />
+          <!-- Icono y tipo -->
+          <div class="flex items-center justify-between mb-4">
+            <div
+              class="w-12 h-12 rounded-xl flex items-center justify-center"
+              style="background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3)); border: 1px solid rgba(255,255,255,0.1)"
+            >
+              <i :class="obtenerIconoTipo(cuenta.tipo)" class="text-xl text-white" />
             </div>
-            <div class="flex gap-2 mt-4">
-              <Button
-                icon="pi pi-pencil"
-                severity="secondary"
-                text
-                rounded
+            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
                 @click="abrirDialogo(cuenta)"
-              />
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                text
-                rounded
+                class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+                style="background: rgba(255,255,255,0.08)"
+              >
+                <i class="pi pi-pencil text-xs" />
+              </button>
+              <button
                 @click="confirmarEliminar(cuenta)"
-              />
+                class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
+                style="background: rgba(255,255,255,0.08)"
+              >
+                <i class="pi pi-trash text-xs" />
+              </button>
             </div>
-          </template>
-        </Card>
+          </div>
+
+          <!-- Nombre y tipo -->
+          <p class="texto-glass font-semibold text-lg mb-1">{{ cuenta.nombre }}</p>
+          <p class="texto-glass-suave text-xs mb-4">{{ obtenerEtiquetaTipo(cuenta.tipo) }}</p>
+
+          <!-- Saldo -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.08)" class="pt-4">
+            <p class="texto-glass-suave text-xs mb-1">Saldo inicial</p>
+            <p class="text-xl font-bold texto-glass">{{ formatearMoneda(cuenta.saldo_inicial) }}</p>
+          </div>
+        </div>
       </div>
 
-      <!-- Mensaje si no hay cuentas -->
-      <Card v-if="!cargando && cuentas.length === 0">
-        <template #content>
-          <div class="text-center py-8">
-            <i class="pi pi-credit-card text-5xl text-gray-300 mb-4" />
-            <p class="text-gray-400">No hay cuentas registradas</p>
-            <Button
-              label="Crear primera cuenta"
-              icon="pi pi-plus"
-              class="mt-4"
-              @click="abrirDialogo()"
-            />
-          </div>
-        </template>
-      </Card>
-
-      <!-- Diálogo crear/editar cuenta -->
-      <Dialog
-        v-model:visible="dialogoVisible"
-        :header="cuentaEditando ? 'Editar cuenta' : 'Nueva cuenta'"
-        modal
-        class="w-full max-w-md"
+      <!-- Diálogo crear/editar -->
+      <div
+        v-if="dialogoVisible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+        @click.self="dialogoVisible = false"
       >
-        <form @submit.prevent="guardarCuenta" class="flex flex-col gap-4">
-          <!-- Nombre -->
-          <div class="flex flex-col gap-1">
-            <label class="font-medium">Nombre</label>
-            <InputText
-              v-model="formulario.nombre"
-              placeholder="Ej: Cuenta corriente BBVA"
-              :invalid="!!errores.nombre"
-              fluid
-            />
-            <small class="text-red-500" v-if="errores.nombre">{{ errores.nombre }}</small>
-          </div>
-
-          <!-- Tipo -->
-          <div class="flex flex-col gap-1">
-            <label class="font-medium">Tipo</label>
-            <Select
-              v-model="formulario.tipo"
-              :options="tiposCuenta"
-              optionLabel="etiqueta"
-              optionValue="valor"
-              placeholder="Selecciona un tipo"
-              :invalid="!!errores.tipo"
-              fluid
-            />
-            <small class="text-red-500" v-if="errores.tipo">{{ errores.tipo }}</small>
-          </div>
-
-          <!-- Saldo inicial -->
-          <div class="flex flex-col gap-1">
-            <label class="font-medium">Saldo inicial</label>
-            <InputNumber
-              v-model="formulario.saldo_inicial"
-              mode="currency"
-              currency="EUR"
-              locale="es-ES"
-              :invalid="!!errores.saldo_inicial"
-              fluid
-            />
-            <small class="text-red-500" v-if="errores.saldo_inicial">{{ errores.saldo_inicial }}</small>
-          </div>
-
-          <!-- Botones -->
-          <div class="flex justify-end gap-2 mt-2">
-            <Button
-              label="Cancelar"
-              severity="secondary"
+        <div class="glass w-full max-w-md p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold texto-glass">
+              {{ cuentaEditando ? 'Editar cuenta' : 'Nueva cuenta' }}
+            </h3>
+            <button
               @click="dialogoVisible = false"
-            />
-            <Button
-              type="submit"
-              :label="cuentaEditando ? 'Guardar cambios' : 'Crear cuenta'"
-              :loading="guardando"
-            />
+              class="w-8 h-8 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+              style="background: rgba(255,255,255,0.08)"
+            >
+              <i class="pi pi-times text-sm" />
+            </button>
           </div>
-        </form>
-      </Dialog>
+
+          <form @submit.prevent="guardarCuenta" class="flex flex-col gap-4">
+            <!-- Nombre -->
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Nombre</label>
+              <input
+                v-model="formulario.nombre"
+                type="text"
+                placeholder="Ej: Cuenta corriente BBVA"
+                class="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                :class="errores.nombre ? 'border-red-400' : 'focus:border-purple-400'"
+              />
+              <small class="text-red-400" v-if="errores.nombre">{{ errores.nombre }}</small>
+            </div>
+
+            <!-- Tipo -->
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Tipo</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  v-for="tipo in tiposCuenta"
+                  :key="tipo.valor"
+                  @click="formulario.tipo = tipo.valor"
+                  class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all"
+                  :style="formulario.tipo === tipo.valor
+                    ? 'background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3)); color: white; border: 1px solid rgba(124,58,237,0.5)'
+                    : 'background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1)'"
+                >
+                  <i :class="obtenerIconoTipo(tipo.valor)" class="text-sm" />
+                  {{ tipo.etiqueta }}
+                </button>
+              </div>
+              <small class="text-red-400" v-if="errores.tipo">{{ errores.tipo }}</small>
+            </div>
+
+            <!-- Saldo inicial -->
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Saldo inicial</label>
+              <input
+                v-model="formulario.saldo_inicial"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                class="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                :class="errores.saldo_inicial ? 'border-red-400' : 'focus:border-purple-400'"
+              />
+              <small class="text-red-400" v-if="errores.saldo_inicial">{{ errores.saldo_inicial }}</small>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-3 mt-2">
+              <button
+                type="button"
+                @click="dialogoVisible = false"
+                class="flex-1 py-3 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                :disabled="guardando"
+                class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+              >
+                <span v-if="!guardando">{{ cuentaEditando ? 'Guardar cambios' : 'Crear cuenta' }}</span>
+                <i v-else class="pi pi-spin pi-spinner" />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Diálogo confirmar eliminar -->
+      <div
+        v-if="dialogoEliminarVisible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+      >
+        <div class="glass w-full max-w-sm p-6 text-center">
+          <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+            style="background: rgba(239,68,68,0.15)">
+            <i class="pi pi-exclamation-triangle text-red-400 text-2xl" />
+          </div>
+          <h3 class="text-lg font-bold texto-glass mb-2">¿Eliminar cuenta?</h3>
+          <p class="texto-glass-suave text-sm mb-6">Esta acción no se puede deshacer.</p>
+          <div class="flex gap-3">
+            <button
+              @click="dialogoEliminarVisible = false"
+              class="flex-1 py-2 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
+            >
+              Cancelar
+            </button>
+            <button
+              @click="eliminarCuenta"
+              class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+              style="background: linear-gradient(135deg, #ef4444, #dc2626)"
+            >
+              Sí, eliminar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </LayoutPrincipal>
 </template>
@@ -142,61 +215,49 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
-import Select from 'primevue/select'
 import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
 import { useAutenticacionStore } from '../stores/autenticacion'
 import api from '../servicios/api'
 
 const toast = useToast()
-const confirm = useConfirm()
 const autenticacion = useAutenticacionStore()
 
-// Estado
 const cuentas = ref([])
 const cargando = ref(false)
 const guardando = ref(false)
 const dialogoVisible = ref(false)
+const dialogoEliminarVisible = ref(false)
 const cuentaEditando = ref(null)
+const cuentaEliminar = ref(null)
 const errores = ref({})
 
-// Tipos de cuenta
 const tiposCuenta = [
   { etiqueta: 'Efectivo', valor: 'efectivo' },
-  { etiqueta: 'Cuenta bancaria', valor: 'bancaria' },
+  { etiqueta: 'Bancaria', valor: 'bancaria' },
   { etiqueta: 'Tarjeta', valor: 'tarjeta' },
   { etiqueta: 'Ahorro', valor: 'ahorro' }
 ]
 
-// Formulario
 const formulario = ref({
   nombre: '',
   tipo: 'bancaria',
   saldo_inicial: 0
 })
 
-// Obtiene la etiqueta del tipo de cuenta
 function obtenerEtiquetaTipo(tipo) {
   return tiposCuenta.find(t => t.valor === tipo)?.etiqueta || tipo
 }
 
-// Obtiene el icono según el tipo de cuenta
 function obtenerIconoTipo(tipo) {
   const iconos = {
     efectivo: 'pi pi-money-bill',
     bancaria: 'pi pi-building-columns',
     tarjeta: 'pi pi-credit-card',
-    ahorro: 'pi pi-piggy-bank'
+    ahorro: 'pi pi-star'
   }
   return iconos[tipo] || 'pi pi-wallet'
 }
 
-// Formatea un número como moneda
 function formatearMoneda(valor) {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -204,7 +265,6 @@ function formatearMoneda(valor) {
   }).format(valor)
 }
 
-// Carga las cuentas
 async function cargarCuentas() {
   cargando.value = true
   try {
@@ -217,11 +277,9 @@ async function cargarCuentas() {
   }
 }
 
-// Abre el diálogo para crear o editar
 function abrirDialogo(cuenta = null) {
   errores.value = {}
   cuentaEditando.value = cuenta
-
   if (cuenta) {
     formulario.value = {
       nombre: cuenta.nombre,
@@ -229,39 +287,36 @@ function abrirDialogo(cuenta = null) {
       saldo_inicial: cuenta.saldo_inicial
     }
   } else {
-    formulario.value = {
-      nombre: '',
-      tipo: 'bancaria',
-      saldo_inicial: 0
-    }
+    formulario.value = { nombre: '', tipo: 'bancaria', saldo_inicial: 0 }
   }
-
   dialogoVisible.value = true
 }
 
-// Valida el formulario
 function validar() {
   errores.value = {}
   if (!formulario.value.nombre) errores.value.nombre = 'El nombre es obligatorio'
   if (!formulario.value.tipo) errores.value.tipo = 'El tipo es obligatorio'
-  if (formulario.value.saldo_inicial === null) errores.value.saldo_inicial = 'El saldo inicial es obligatorio'
+  if (formulario.value.saldo_inicial === null || formulario.value.saldo_inicial === '') {
+    errores.value.saldo_inicial = 'El saldo inicial es obligatorio'
+  }
   return Object.keys(errores.value).length === 0
 }
 
-// Guarda la cuenta (crear o editar)
 async function guardarCuenta() {
   if (!validar()) return
   guardando.value = true
-
   try {
+    const datos = {
+      ...formulario.value,
+      saldo_inicial: parseFloat(formulario.value.saldo_inicial)
+    }
     if (cuentaEditando.value) {
-      await api.put(`/cuentas/${cuentaEditando.value.id}`, formulario.value)
+      await api.put(`/cuentas/${cuentaEditando.value.id}`, datos)
       toast.add({ severity: 'success', summary: 'Actualizada', detail: 'Cuenta actualizada correctamente', life: 3000 })
     } else {
-      await api.post('/cuentas/', formulario.value)
+      await api.post('/cuentas/', datos)
       toast.add({ severity: 'success', summary: 'Creada', detail: 'Cuenta creada correctamente', life: 3000 })
     }
-
     dialogoVisible.value = false
     await cargarCuentas()
   } catch (error) {
@@ -271,25 +326,20 @@ async function guardarCuenta() {
   }
 }
 
-// Confirma y elimina una cuenta
 function confirmarEliminar(cuenta) {
-  confirm.require({
-    message: '¿Estás seguro de que quieres eliminar esta cuenta?',
-    header: 'Confirmar eliminación',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Sí, eliminar',
-    rejectLabel: 'Cancelar',
-    acceptClass: 'p-button-danger',
-    accept: async () => {
-      try {
-        await api.delete(`/cuentas/${cuenta.id}`)
-        toast.add({ severity: 'success', summary: 'Eliminada', detail: 'Cuenta eliminada correctamente', life: 3000 })
-        await cargarCuentas()
-      } catch {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar la cuenta', life: 3000 })
-      }
-    }
-  })
+  cuentaEliminar.value = cuenta
+  dialogoEliminarVisible.value = true
+}
+
+async function eliminarCuenta() {
+  try {
+    await api.delete(`/cuentas/${cuentaEliminar.value.id}`)
+    toast.add({ severity: 'success', summary: 'Eliminada', detail: 'Cuenta eliminada correctamente', life: 3000 })
+    dialogoEliminarVisible.value = false
+    await cargarCuentas()
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar la cuenta', life: 3000 })
+  }
 }
 
 onMounted(() => cargarCuentas())

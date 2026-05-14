@@ -1,29 +1,29 @@
 # Gestión de seguridad: cifrado de contraseñas y tokens JWT
 # Basado en:
 # https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
-# https://passlib.readthedocs.io/en/stable/lib/passlib.context.html
+# https://pypi.org/project/bcrypt/
 
 from datetime import datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.core.configuracion import configuracion
-
-# Contexto de cifrado usando bcrypt
-# bcrypt es el esquema recomendado para contraseñas
-contexto_cifrado = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verificar_contraseña(contraseña_plana: str, contraseña_hash: str) -> bool:
     """Compara una contraseña en texto plano con su hash almacenado."""
-    return contexto_cifrado.verify(contraseña_plana, contraseña_hash)
+    return bcrypt.checkpw(
+        contraseña_plana.encode("utf-8"),
+        contraseña_hash.encode("utf-8")
+    )
 
 
 def obtener_hash_contraseña(contraseña: str) -> str:
     """Genera el hash bcrypt de una contraseña."""
-    return contexto_cifrado.hash(contraseña)
+    sal = bcrypt.gensalt()
+    return bcrypt.hashpw(contraseña.encode("utf-8"), sal).decode("utf-8")
 
 
 def crear_token_acceso(datos: dict, expiracion: Optional[timedelta] = None) -> str:
@@ -33,7 +33,6 @@ def crear_token_acceso(datos: dict, expiracion: Optional[timedelta] = None) -> s
     """
     datos_token = datos.copy()
 
-    # Calcula el tiempo de expiración
     if expiracion:
         expira = datetime.utcnow() + expiracion
     else:
@@ -41,10 +40,8 @@ def crear_token_acceso(datos: dict, expiracion: Optional[timedelta] = None) -> s
             minutes=configuracion.MINUTOS_EXPIRACION_TOKEN
         )
 
-    # Añade la claim de expiración al payload del token
     datos_token.update({"exp": expira})
 
-    # Codifica y firma el token JWT
     token = jwt.encode(
         datos_token,
         configuracion.SECRET_KEY,

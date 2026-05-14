@@ -15,21 +15,29 @@ export const useAutenticacionStore = defineStore('autenticacion', () => {
     const estaAutenticado = computed(() => !!token.value)
 
     // Acciones
-    async function iniciarSesion(email, contrasena) {
-        // OAuth2PasswordRequestForm espera FormData con 'username' y 'password'
-        const formulario = new FormData()
-        formulario.append('username', email)
-        formulario.append('password', contrasena)
+   async function iniciarSesion(email, contrasena) {
+    // Importa axios directamente para evitar el interceptor de api.js
+    const axios = (await import('axios')).default
 
-        const respuesta = await api.post('/auth/token', formulario)
+    const params = new URLSearchParams()
+    params.append('username', email)
+    params.append('password', contrasena)
 
-        // Guarda el token en el estado y en localStorage
-        token.value = respuesta.data.access_token
-        localStorage.setItem('token', token.value)
+    const respuesta = await axios.post(
+        'http://127.0.0.1:8000/auth/token',
+        params,
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }
+    )
 
-        // Obtiene los datos del usuario autenticado
-        await obtenerPerfil()
-    }
+    token.value = respuesta.data.access_token
+    localStorage.setItem('token', token.value)
+
+    await obtenerPerfil()
+}
 
     async function registrar(nombre, email, contrasena) {
         await api.post('/auth/registro', {

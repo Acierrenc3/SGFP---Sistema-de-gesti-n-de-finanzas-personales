@@ -1,143 +1,162 @@
-<!-- Vista del dashboard con resumen financiero -->
-<!-- Basado en: https://primevue.org/chart/ -->
+<!-- Vista del dashboard con estilo Glassmorphism -->
 
 <template>
   <LayoutPrincipal>
     <div class="p-6">
       <!-- Cabecera -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-8">
         <div>
-          <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
-          <p class="text-gray-500">Resumen de tus finanzas</p>
+          <h2 class="text-2xl font-bold texto-glass">Dashboard</h2>
+          <p class="texto-glass-suave text-sm mt-1">Resumen de tus finanzas</p>
         </div>
 
         <!-- Selector de mes y año -->
         <div class="flex gap-2">
-          <Select
+          <select
             v-model="mesSeleccionado"
-            :options="meses"
-            optionLabel="etiqueta"
-            optionValue="valor"
-            placeholder="Mes"
             @change="cargarDatos"
-          />
-          <Select
+            class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
+            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15)"
+          >
+            <option v-for="mes in meses" :key="mes.valor" :value="mes.valor" class="bg-gray-900">
+              {{ mes.etiqueta }}
+            </option>
+          </select>
+          <select
             v-model="anioSeleccionado"
-            :options="anios"
-            placeholder="Año"
             @change="cargarDatos"
-          />
+            class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
+            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15)"
+          >
+            <option v-for="anio in anios" :key="anio" :value="anio" class="bg-gray-900">
+              {{ anio }}
+            </option>
+          </select>
         </div>
       </div>
 
       <!-- Tarjetas de resumen -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <!-- Ingresos -->
-        <Card class="border-l-4 border-green-500">
-          <template #content>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500">Ingresos</p>
-                <p class="text-2xl font-bold text-green-600">
-                  {{ formatearMoneda(resumen?.balance?.total_ingresos) }}
-                </p>
-              </div>
-              <i class="pi pi-arrow-up text-3xl text-green-400" />
+        <div class="glass p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="texto-glass-suave text-sm mb-1">Ingresos</p>
+              <p class="text-2xl font-bold text-green-400">
+                {{ formatearMoneda(resumen?.balance?.total_ingresos) }}
+              </p>
             </div>
-          </template>
-        </Card>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+              style="background: rgba(74,222,128,0.15)">
+              <i class="pi pi-arrow-up text-green-400 text-xl" />
+            </div>
+          </div>
+        </div>
 
         <!-- Gastos -->
-        <Card class="border-l-4 border-red-500">
-          <template #content>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500">Gastos</p>
-                <p class="text-2xl font-bold text-red-600">
-                  {{ formatearMoneda(resumen?.balance?.total_gastos) }}
-                </p>
-              </div>
-              <i class="pi pi-arrow-down text-3xl text-red-400" />
+        <div class="glass p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="texto-glass-suave text-sm mb-1">Gastos</p>
+              <p class="text-2xl font-bold text-red-400">
+                {{ formatearMoneda(resumen?.balance?.total_gastos) }}
+              </p>
             </div>
-          </template>
-        </Card>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+              style="background: rgba(248,113,113,0.15)">
+              <i class="pi pi-arrow-down text-red-400 text-xl" />
+            </div>
+          </div>
+        </div>
 
         <!-- Balance -->
-        <Card class="border-l-4 border-blue-500">
-          <template #content>
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-500">Balance</p>
-                <p
-                  class="text-2xl font-bold"
-                  :class="resumen?.balance?.balance >= 0 ? 'text-blue-600' : 'text-red-600'"
-                >
-                  {{ formatearMoneda(resumen?.balance?.balance) }}
-                </p>
-              </div>
-              <i class="pi pi-chart-line text-3xl text-blue-400" />
+        <div class="glass p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="texto-glass-suave text-sm mb-1">Balance</p>
+              <p
+                class="text-2xl font-bold"
+                :class="(resumen?.balance?.balance ?? 0) >= 0 ? 'text-purple-400' : 'text-red-400'"
+              >
+                {{ formatearMoneda(resumen?.balance?.balance) }}
+              </p>
             </div>
-          </template>
-        </Card>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+              style="background: rgba(124,58,237,0.15)">
+              <i class="pi pi-chart-line text-purple-400 text-xl" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Gráficos -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <!-- Gastos por categoría -->
-        <Card>
-          <template #title>Gastos por categoría</template>
-          <template #content>
-            <Chart
-              v-if="datosCategorias.labels.length"
-              type="doughnut"
-              :data="datosCategorias"
-              :options="opcionesGrafico"
-              class="h-64"
-            />
-            <p v-else class="text-center text-gray-400 py-8">Sin datos disponibles</p>
-          </template>
-        </Card>
+        <div class="glass p-6">
+          <h3 class="texto-glass font-semibold mb-4">Gastos por categoría</h3>
+          <Chart
+            v-if="datosCategorias.labels.length"
+            type="doughnut"
+            :data="datosCategorias"
+            :options="opcionesGrafico"
+            class="h-64"
+          />
+          <div v-else class="flex flex-col items-center justify-center h-64 texto-glass-suave">
+            <i class="pi pi-chart-pie text-4xl mb-2 opacity-30" />
+            <p class="text-sm">Sin datos disponibles</p>
+          </div>
+        </div>
 
         <!-- Evolución mensual -->
-        <Card>
-          <template #title>Evolución mensual</template>
-          <template #content>
-            <Chart
-              v-if="datosEvolucion.labels.length"
-              type="bar"
-              :data="datosEvolucion"
-              :options="opcionesBarras"
-              class="h-64"
-            />
-            <p v-else class="text-center text-gray-400 py-8">Sin datos disponibles</p>
-          </template>
-        </Card>
+        <div class="glass p-6">
+          <h3 class="texto-glass font-semibold mb-4">Evolución mensual</h3>
+          <Chart
+            v-if="datosEvolucion.labels.length"
+            type="bar"
+            :data="datosEvolucion"
+            :options="opcionesBarras"
+            class="h-64"
+          />
+          <div v-else class="flex flex-col items-center justify-center h-64 texto-glass-suave">
+            <i class="pi pi-chart-bar text-4xl mb-2 opacity-30" />
+            <p class="text-sm">Sin datos disponibles</p>
+          </div>
+        </div>
       </div>
 
       <!-- Presupuestos -->
-      <Card v-if="resumen?.resumen_presupuestos?.length">
-        <template #title>Estado de presupuestos</template>
-        <template #content>
-          <div class="flex flex-col gap-4">
-            <div
-              v-for="presupuesto in resumen.resumen_presupuestos"
-              :key="presupuesto.id_categoria"
-            >
-              <div class="flex justify-between mb-1">
-                <span class="font-medium">{{ presupuesto.nombre_categoria }}</span>
-                <span class="text-sm text-gray-500">
-                  {{ formatearMoneda(presupuesto.gasto_actual) }} /
-                  {{ formatearMoneda(presupuesto.importe_limite) }}
-                </span>
-              </div>
-              <ProgressBar
-                :value="Math.min(presupuesto.porcentaje_usado, 100)"
-                :class="presupuesto.porcentaje_usado >= 100 ? 'text-red-500' : ''"
+      <div class="glass p-6" v-if="resumen?.resumen_presupuestos?.length">
+        <h3 class="texto-glass font-semibold mb-4">Estado de presupuestos</h3>
+        <div class="flex flex-col gap-4">
+          <div
+            v-for="presupuesto in resumen.resumen_presupuestos"
+            :key="presupuesto.id_categoria"
+          >
+            <div class="flex justify-between mb-2">
+              <span class="texto-glass text-sm font-medium">{{ presupuesto.nombre_categoria }}</span>
+              <span class="texto-glass-suave text-sm">
+                {{ formatearMoneda(presupuesto.gasto_actual) }} /
+                {{ formatearMoneda(presupuesto.importe_limite) }}
+              </span>
+            </div>
+            <!-- Barra de progreso personalizada -->
+            <div class="w-full h-2 rounded-full" style="background: rgba(255,255,255,0.1)">
+              <div
+                class="h-2 rounded-full transition-all"
+                :style="{
+                  width: `${Math.min(presupuesto.porcentaje_usado, 100)}%`,
+                  background: presupuesto.porcentaje_usado >= 100
+                    ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                    : presupuesto.porcentaje_usado >= 80
+                    ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                    : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
+                }"
               />
             </div>
+            <p class="text-xs texto-glass-suave mt-1">{{ presupuesto.porcentaje_usado.toFixed(1) }}% usado</p>
           </div>
-        </template>
-      </Card>
+        </div>
+      </div>
     </div>
   </LayoutPrincipal>
 </template>
@@ -145,10 +164,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import Card from 'primevue/card'
 import Chart from 'primevue/chart'
-import Select from 'primevue/select'
-import ProgressBar from 'primevue/progressbar'
 import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
 import { useAutenticacionStore } from '../stores/autenticacion'
 import api from '../servicios/api'
@@ -156,29 +172,20 @@ import api from '../servicios/api'
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
 
-// Estado
 const resumen = ref(null)
 const cargando = ref(false)
 
-// Mes y año seleccionados (por defecto el actual)
 const ahora = new Date()
 const mesSeleccionado = ref(ahora.getMonth() + 1)
 const anioSeleccionado = ref(ahora.getFullYear())
 
-// Opciones de mes y año
 const meses = [
-  { etiqueta: 'Enero', valor: 1 },
-  { etiqueta: 'Febrero', valor: 2 },
-  { etiqueta: 'Marzo', valor: 3 },
-  { etiqueta: 'Abril', valor: 4 },
-  { etiqueta: 'Mayo', valor: 5 },
-  { etiqueta: 'Junio', valor: 6 },
-  { etiqueta: 'Julio', valor: 7 },
-  { etiqueta: 'Agosto', valor: 8 },
-  { etiqueta: 'Septiembre', valor: 9 },
-  { etiqueta: 'Octubre', valor: 10 },
-  { etiqueta: 'Noviembre', valor: 11 },
-  { etiqueta: 'Diciembre', valor: 12 }
+  { etiqueta: 'Enero', valor: 1 }, { etiqueta: 'Febrero', valor: 2 },
+  { etiqueta: 'Marzo', valor: 3 }, { etiqueta: 'Abril', valor: 4 },
+  { etiqueta: 'Mayo', valor: 5 }, { etiqueta: 'Junio', valor: 6 },
+  { etiqueta: 'Julio', valor: 7 }, { etiqueta: 'Agosto', valor: 8 },
+  { etiqueta: 'Septiembre', valor: 9 }, { etiqueta: 'Octubre', valor: 10 },
+  { etiqueta: 'Noviembre', valor: 11 }, { etiqueta: 'Diciembre', valor: 12 }
 ]
 
 const anios = computed(() => {
@@ -186,22 +193,18 @@ const anios = computed(() => {
   return Array.from({ length: 5 }, (_, i) => anioActual - i)
 })
 
-// Datos para el gráfico de categorías
 const datosCategorias = computed(() => {
   const gastos = resumen.value?.gastos_por_categoria || []
   return {
     labels: gastos.map(g => g.nombre_categoria),
     datasets: [{
       data: gastos.map(g => g.total),
-      backgroundColor: [
-        '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-        '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'
-      ]
+      backgroundColor: ['#7c3aed', '#00b4d8', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4'],
+      borderWidth: 0
     }]
   }
 })
 
-// Datos para el gráfico de evolución mensual
 const datosEvolucion = computed(() => {
   const evolucion = resumen.value?.evolucion_mensual || []
   return {
@@ -210,31 +213,45 @@ const datosEvolucion = computed(() => {
       {
         label: 'Ingresos',
         data: evolucion.map(e => e.total_ingresos),
-        backgroundColor: '#10B981'
+        backgroundColor: 'rgba(16,185,129,0.7)',
+        borderRadius: 6
       },
       {
         label: 'Gastos',
         data: evolucion.map(e => e.total_gastos),
-        backgroundColor: '#EF4444'
+        backgroundColor: 'rgba(239,68,68,0.7)',
+        borderRadius: 6
       }
     ]
   }
 })
 
-// Opciones de los gráficos
 const opcionesGrafico = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom' } }
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: { color: 'rgba(255,255,255,0.7)', padding: 16, font: { size: 12 } }
+    }
+  }
 }
 
 const opcionesBarras = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom' } }
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: { color: 'rgba(255,255,255,0.7)', padding: 16, font: { size: 12 } }
+    }
+  },
+  scales: {
+    x: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+    y: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+  }
 }
 
-// Formatea un número como moneda
 function formatearMoneda(valor) {
   if (valor === undefined || valor === null) return '0,00 €'
   return new Intl.NumberFormat('es-ES', {
@@ -243,24 +260,15 @@ function formatearMoneda(valor) {
   }).format(valor)
 }
 
-// Carga los datos del dashboard
 async function cargarDatos() {
   cargando.value = true
   try {
     const respuesta = await api.get('/dashboard/resumen', {
-      params: {
-        mes: mesSeleccionado.value,
-        anio: anioSeleccionado.value
-      }
+      params: { mes: mesSeleccionado.value, anio: anioSeleccionado.value }
     })
     resumen.value = respuesta.data
-  } catch (error) {
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'No se pudieron cargar los datos del dashboard',
-      life: 3000
-    })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los datos', life: 3000 })
   } finally {
     cargando.value = false
   }
