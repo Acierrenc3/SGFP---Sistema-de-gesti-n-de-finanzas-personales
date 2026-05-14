@@ -1,0 +1,2 @@
+# SGFP - Sistema de gestión de finanzas personales
+ Es una app creada para gestionar ingresos y gastos de manera intuitiva, con dashboards fáciles de entender, y con la posibilidad de añadir o quitar gastos/ingresos, tambien incluira una funcionalidad de poder sacar 1 foto a un ticket de la compra o de otro sitio y que, con ayuda de la IA, esta desglose el gasto en el grupo que corresponda. Backend con NestJS, FrontEnd con Vue y GUI de PrimeVue
