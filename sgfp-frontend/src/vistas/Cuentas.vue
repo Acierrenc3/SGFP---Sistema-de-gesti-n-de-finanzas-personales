@@ -20,20 +20,28 @@
       </div>
 
       <!-- Resumen total -->
-      <div class="glass p-5 mb-6" v-if="saldos.length">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="texto-glass-suave text-sm mb-1">Patrimonio total</p>
-            <p class="text-3xl font-bold texto-glass">{{ formatearMoneda(patrimonioTotal) }}</p>
-          </div>
-          <div
-            class="w-14 h-14 rounded-xl flex items-center justify-center"
-            style="background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3))"
-          >
-            <i class="pi pi-chart-line text-white text-2xl" />
-          </div>
-        </div>
+<div class="glass p-5 mb-6" v-if="saldos.length">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <p class="texto-glass-suave text-sm">Patrimonio total</p>
+        <button
+          @click="cantidadesOcultas = !cantidadesOcultas"
+          class="texto-glass-suave hover:text-white transition-colors"
+        >
+          <i :class="cantidadesOcultas ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
+        </button>
       </div>
+      <p class="text-3xl font-bold texto-glass">{{ formatearOculto(patrimonioTotal) }}</p>
+    </div>
+    <div
+      class="w-14 h-14 rounded-xl flex items-center justify-center"
+      style="background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3))"
+    >
+      <i class="pi pi-chart-line text-white text-2xl" />
+    </div>
+  </div>
+</div>
 
       <!-- Grid de cuentas -->
       <div v-if="cargando" class="flex justify-center py-12">
@@ -89,31 +97,29 @@
           <p class="texto-glass font-semibold text-lg mb-1">{{ cuenta.nombre }}</p>
           <p class="texto-glass-suave text-xs mb-4">{{ obtenerEtiquetaTipo(cuenta.tipo) }}</p>
 
-          <!-- Saldo actual -->
-          <div style="border-top: 1px solid rgba(255,255,255,0.08)" class="pt-4">
-            <p class="texto-glass-suave text-xs mb-1">Saldo actual</p>
-            <p
-              class="text-2xl font-bold"
-              :class="cuenta.saldo_actual >= 0 ? 'texto-glass' : 'text-red-400'"
-            >
-              {{ formatearMoneda(cuenta.saldo_actual) }}
-            </p>
+      <!-- Saldo actual -->
+      <div style="border-top: 1px solid rgba(255,255,255,0.08)" class="pt-4">
+        <p class="texto-glass-suave text-xs mb-1">Saldo actual</p>
+        <p
+          class="text-2xl font-bold"
+          :class="cuenta.saldo_actual >= 0 ? 'texto-glass' : 'text-red-400'"
+        >
+          {{ formatearOculto(cuenta.saldo_actual) }}
+        </p>
 
-            <!-- Desglose -->
-            <div class="flex gap-4 mt-3">
-              <div>
-                <p class="text-xs texto-glass-suave">Ingresos</p>
-                <p class="text-sm text-green-400 font-medium">+{{ formatearMoneda(cuenta.total_ingresos) }}</p>
-              </div>
-              <div>
-                <p class="text-xs texto-glass-suave">Gastos</p>
-                <p class="text-sm text-red-400 font-medium">-{{ formatearMoneda(cuenta.total_gastos) }}</p>
-              </div>
-              <div>
-                <p class="text-xs texto-glass-suave">Inicial</p>
-                <p class="text-sm texto-glass font-medium">{{ formatearMoneda(cuenta.saldo_inicial) }}</p>
-              </div>
-            </div>
+        <!-- Desglose -->
+        <div class="flex gap-4 mt-3">
+          <div>
+            <p class="text-xs texto-glass-suave">Ingresos</p>
+            <p class="text-sm text-green-400 font-medium">+{{ formatearOculto(cuenta.total_ingresos) }}</p>
+          </div>
+          <div>
+            <p class="text-xs texto-glass-suave">Gastos</p>
+            <p class="text-sm text-red-400 font-medium">-{{ formatearOculto(cuenta.total_gastos) }}</p>
+          </div>
+          <div>
+            <p class="text-xs texto-glass-suave">Inicial</p>
+            <p class="text-sm texto-glass font-medium">{{ formatearOculto(cuenta.saldo_inicial) }}</p>
           </div>
         </div>
       </div>
@@ -269,6 +275,11 @@ const cuentaEditando = ref(null)
 const cuentaEliminar = ref(null)
 const errores = ref({})
 
+const cantidadesOcultas = ref(false)
+
+function formatearOculto(valor) {
+  return cantidadesOcultas.value ? '••••••' : formatearMoneda(valor)
+}
 const tiposCuenta = [
   { etiqueta: 'Efectivo', valor: 'efectivo' },
   { etiqueta: 'Bancaria', valor: 'bancaria' },
