@@ -11,15 +11,14 @@ from app.api.endpoints import (
     dashboard,
     exportar,
     presupuestos,
-    transacciones
+    transacciones,
+    usuarios
 )
 from app.core.configuracion import configuracion
 from app.db.base import Base
 from app.db.sesion import motor
-from app.api.endpoints import usuarios
 
 # Crea todas las tablas en la base de datos al arrancar
-# En producción se usará Alembic para las migraciones
 Base.metadata.create_all(bind=motor)
 
 # Instancia principal de la aplicación FastAPI
@@ -32,7 +31,6 @@ app = FastAPI(
 )
 
 # Configuración de CORS
-# Permite peticiones desde el frontend (Vue) durante el desarrollo
 # Basado en: https://fastapi.tiangolo.com/tutorial/cors/
 app.add_middleware(
     CORSMiddleware,
@@ -41,14 +39,14 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "https://sgfp-sistema-de-gesti-n-de-finanzas.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Registro de routers con sus prefijos y etiquetas
-# Basado en: https://fastapi.tiangolo.com/tutorial/bigger-applications/#include-the-routers
+# Registro de routers
 app.include_router(
     autenticacion.enrutador,
     prefix="/auth",
