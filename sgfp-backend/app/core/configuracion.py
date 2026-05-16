@@ -16,6 +16,9 @@ class Configuracion(BaseSettings):
     # Tiempo de expiración del token en minutos
     MINUTOS_EXPIRACION_TOKEN: int = 30
 
+    # Tiempo de expiración del token en dias
+    DIAS_EXPIRACION_TOKEN: int = 7
+
     class Config:
         # Pydantic lee automáticamente las variables del archivo .env
         env_file = ".env"

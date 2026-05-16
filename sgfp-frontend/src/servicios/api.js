@@ -3,7 +3,6 @@
 
 import axios from 'axios'
 
-// Crea una instancia de Axios con la URL base de la API
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
     headers: {
@@ -11,9 +10,7 @@ const api = axios.create({
     }
 })
 
-// Interceptor de peticiones
-// Añade el token JWT a cada petición automáticamente
-// Basado en: https://axios-http.com/docs/interceptors
+// Interceptor de peticiones: añade el token JWT
 api.interceptors.request.use(
     (configuracion) => {
         const token = localStorage.getItem('token')
@@ -25,17 +22,37 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 )
 
-// Interceptor de respuestas
-// Maneja errores globales de autenticación (401)
+// Interceptor de respuestas: renueva el token si expira (401)
 api.interceptors.response.use(
     (respuesta) => respuesta,
-    (error) => {
-        // Si el token expiró o es inválido, limpia la sesión
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token')
-            localStorage.removeItem('usuario')
-            window.location.href = '/inicio-sesion'
+    async (error) => {
+        const peticionOriginal = error.config
+
+        // Si el token expiró y no hemos intentado renovarlo aún
+        if (error.response?.status === 401 && !peticionOriginal._reintentado) {
+            peticionOriginal._reintentado = true
+
+            try {
+                // Importa el store dinámicamente para evitar dependencias circulares
+                const { useAutenticacionStore } = await import('../stores/autenticacion')
+                const autenticacion = useAutenticacionStore()
+
+                const nuevoToken = await autenticacion.renovarToken()
+
+                if (nuevoToken) {
+                    // Reintenta la petición original con el nuevo token
+                    peticionOriginal.headers.Authorization = `Bearer ${nuevoToken}`
+                    return api(peticionOriginal)
+                }
+            } catch {
+                // Si falla el refresh, redirige al login
+                localStorage.removeItem('token')
+                localStorage.removeItem('refresh_token')
+                localStorage.removeItem('usuario')
+                window.location.href = '/inicio-sesion'
+            }
         }
+
         return Promise.reject(error)
     }
 )

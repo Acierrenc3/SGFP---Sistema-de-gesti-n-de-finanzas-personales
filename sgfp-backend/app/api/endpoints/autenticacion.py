@@ -143,11 +143,12 @@ from sqlalchemy.orm import Session
 
 from app.core.seguridad import (
     crear_token_acceso,
+    crear_refresh_token,
     obtener_hash_contraseña,
     verificar_contraseña
 )
+from app.esquemas.usuario import TokenAcceso, UsuarioCrear, UsuarioRespuesta, RefreshToken
 from app.db.sesion import obtener_sesion
-from app.esquemas.usuario import TokenAcceso, UsuarioCrear, UsuarioRespuesta
 from app.modelos.categoria import Categoria
 from app.modelos.usuario import Usuario
 
@@ -273,10 +274,6 @@ def login(
     formulario: OAuth2PasswordRequestForm = Depends(),
     sesion: Session = Depends(obtener_sesion)
 ):
-    """
-    Autentica al usuario con email y contraseña.
-    Devuelve un token JWT si las credenciales son correctas.
-    """
     usuario = sesion.query(Usuario).filter(
         Usuario.email == formulario.username
     ).first()
@@ -294,6 +291,53 @@ def login(
             detail="Cuenta de usuario inactiva"
         )
 
-    token = crear_token_acceso(datos={"sub": usuario.email})
+    # Genera ambos tokens
+    token_acceso = crear_token_acceso(datos={"sub": usuario.email})
+    refresh_token = crear_refresh_token(datos={"sub": usuario.email})
 
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": token_acceso,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+
+@enrutador.post(
+    "/refresh",
+    response_model=TokenAcceso,
+    summary="Renovar token de acceso"
+)
+def renovar_token(
+    datos: RefreshToken,
+    sesion: Session = Depends(obtener_sesion)
+):
+    """
+    Renueva el token de acceso usando el refresh token.
+    Verifica que el refresh token sea válido y de tipo 'refresh'.
+    """
+    payload = decodificar_token(datos.refresh_token)
+
+    if not payload or payload.get("tipo") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token inválido o expirado"
+        )
+
+    email = payload.get("sub")
+    usuario = sesion.query(Usuario).filter(Usuario.email == email).first()
+
+    if not usuario or not usuario.activo:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado o inactivo"
+        )
+
+    # Genera nuevos tokens
+    nuevo_token_acceso = crear_token_acceso(datos={"sub": email})
+    nuevo_refresh_token = crear_refresh_token(datos={"sub": email})
+
+    return {
+        "access_token": nuevo_token_acceso,
+        "refresh_token": nuevo_refresh_token,
+        "token_type": "bearer"
+    }

@@ -246,6 +246,7 @@ const monedas = [
 ]
 
 const zonasHorarias = [
+  { etiqueta: 'Atlántico/Canarias', valor: 'Atlantic/Canary' },
   { etiqueta: 'Europa/Madrid', valor: 'Europe/Madrid' },
   { etiqueta: 'Europa/Londres', valor: 'Europe/London' },
   { etiqueta: 'Europa/París', valor: 'Europe/Paris' },
