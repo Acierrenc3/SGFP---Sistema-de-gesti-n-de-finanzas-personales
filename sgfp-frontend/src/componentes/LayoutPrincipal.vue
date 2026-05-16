@@ -1,8 +1,8 @@
-<!-- Layout principal con barra lateral Glassmorphism -->
+<!-- Layout principal responsive con nav inferior en móvil -->
 
 <template>
   <div class="min-h-screen flex" style="background: var(--gradiente-fondo)">
-    <!-- Círculos decorativos de fondo -->
+    <!-- Círculos decorativos -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-10"
         style="background: radial-gradient(circle, #e040fb, transparent)" />
@@ -10,9 +10,11 @@
         style="background: radial-gradient(circle, #00b4d8, transparent)" />
     </div>
 
-    <!-- Barra lateral -->
-    <aside class="w-64 flex flex-col fixed h-full z-20"
-      style="background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); border-right: 1px solid rgba(255,255,255,0.1)">
+    <!-- Barra lateral (solo escritorio) -->
+    <aside
+      class="hidden md:flex w-64 flex-col fixed h-full z-20"
+      style="background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); border-right: 1px solid rgba(255,255,255,0.1)"
+    >
       <!-- Logo -->
       <div class="p-6 mb-2" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
         <div class="flex items-center gap-3">
@@ -27,16 +29,14 @@
         </div>
       </div>
 
-      <!-- Menú de navegación -->
+      <!-- Menú navegación -->
       <nav class="flex-1 p-4 overflow-y-auto">
         <ul class="flex flex-col gap-1">
           <li v-for="item in menuItems" :key="item.ruta">
             <RouterLink
               :to="item.ruta"
               class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all texto-glass-suave hover:texto-glass group"
-              :class="esRutaActiva(item.ruta)
-                ? 'text-white font-medium'
-                : 'hover:bg-white/10'"
+              :class="esRutaActiva(item.ruta) ? 'text-white font-medium' : 'hover:bg-white/10'"
               :style="esRutaActiva(item.ruta)
                 ? 'background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(0,180,216,0.5)); border: 1px solid rgba(255,255,255,0.15)'
                 : ''"
@@ -48,7 +48,7 @@
         </ul>
       </nav>
 
-      <!-- Información del usuario -->
+      <!-- Usuario y cerrar sesión -->
       <div class="p-4" style="border-top: 1px solid rgba(255,255,255,0.1)">
         <div class="flex items-center gap-3 px-2 py-2 mb-2">
           <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
@@ -60,8 +60,6 @@
             <p class="text-xs texto-glass-suave truncate">{{ autenticacion.usuario?.email }}</p>
           </div>
         </div>
-
-        <!-- Botón cerrar sesión -->
         <button
           @click="cerrarSesion"
           class="w-full flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all texto-glass-suave hover:text-red-400 hover:bg-red-400/10"
@@ -73,9 +71,59 @@
     </aside>
 
     <!-- Contenido principal -->
-    <main class="flex-1 ml-64 relative z-10 overflow-auto min-h-screen">
+    <main class="flex-1 md:ml-64 relative z-10 overflow-auto min-h-screen pb-20 md:pb-0">
+      <!-- Cabecera móvil -->
+      <div
+        class="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-10"
+        style="background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08)"
+      >
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
+            <i class="pi pi-wallet text-white text-sm" />
+          </div>
+          <span class="font-bold texto-glass">SGFP</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="texto-glass-suave text-sm">{{ autenticacion.usuario?.nombre }}</span>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
+            {{ inicialUsuario }}
+          </div>
+        </div>
+      </div>
+
       <slot />
     </main>
+
+    <!-- Barra de navegación inferior (solo móvil) -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around px-2 py-2"
+      style="background: rgba(26,26,46,0.97); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1)"
+    >
+      <RouterLink
+        v-for="item in menuItems"
+        :key="item.ruta"
+        :to="item.ruta"
+        class="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all"
+        :style="esRutaActiva(item.ruta)
+          ? 'color: #a78bfa'
+          : 'color: rgba(255,255,255,0.4)'"
+      >
+        <i :class="item.icono" class="text-xl" />
+        <span class="text-xs">{{ item.etiquetaCorta }}</span>
+      </RouterLink>
+
+      <!-- Botón cerrar sesión en móvil -->
+      <button
+        @click="cerrarSesion"
+        class="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all"
+        style="color: rgba(255,255,255,0.4)"
+      >
+        <i class="pi pi-sign-out text-xl" />
+        <span class="text-xs">Salir</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -91,12 +139,12 @@ const toast = useToast()
 const autenticacion = useAutenticacionStore()
 
 const menuItems = [
-  { etiqueta: 'Dashboard', ruta: '/dashboard', icono: 'pi pi-home' },
-  { etiqueta: 'Transacciones', ruta: '/transacciones', icono: 'pi pi-arrow-right-arrow-left' },
-  { etiqueta: 'Categorías', ruta: '/categorias', icono: 'pi pi-tag' },
-  { etiqueta: 'Presupuestos', ruta: '/presupuestos', icono: 'pi pi-wallet' },
-  { etiqueta: 'Cuentas', ruta: '/cuentas', icono: 'pi pi-credit-card' },
-  { etiqueta: 'Perfil', ruta: '/perfil', icono: 'pi pi-user' }
+  { etiqueta: 'Dashboard', etiquetaCorta: 'Inicio', ruta: '/dashboard', icono: 'pi pi-home' },
+  { etiqueta: 'Transacciones', etiquetaCorta: 'Movimientos', ruta: '/transacciones', icono: 'pi pi-arrow-right-arrow-left' },
+  { etiqueta: 'Categorías', etiquetaCorta: 'Categorías', ruta: '/categorias', icono: 'pi pi-tag' },
+  { etiqueta: 'Presupuestos', etiquetaCorta: 'Presupuesto', ruta: '/presupuestos', icono: 'pi pi-wallet' },
+  { etiqueta: 'Cuentas', etiquetaCorta: 'Cuentas', ruta: '/cuentas', icono: 'pi pi-credit-card' },
+  { etiqueta: 'Perfil', etiquetaCorta: 'Perfil', ruta: '/perfil', icono: 'pi pi-user' }
 ]
 
 const inicialUsuario = computed(() => {
