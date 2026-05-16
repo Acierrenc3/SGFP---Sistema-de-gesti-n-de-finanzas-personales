@@ -1,4 +1,4 @@
-<!-- Vista de cuentas con estilo Glassmorphism -->
+<!-- Vista de cuentas con estilo Glassmorphism y saldo dinámico -->
 
 <template>
   <LayoutPrincipal>
@@ -19,12 +19,28 @@
         </button>
       </div>
 
+      <!-- Resumen total -->
+      <div class="glass p-5 mb-6" v-if="saldos.length">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="texto-glass-suave text-sm mb-1">Patrimonio total</p>
+            <p class="text-3xl font-bold texto-glass">{{ formatearMoneda(patrimonioTotal) }}</p>
+          </div>
+          <div
+            class="w-14 h-14 rounded-xl flex items-center justify-center"
+            style="background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3))"
+          >
+            <i class="pi pi-chart-line text-white text-2xl" />
+          </div>
+        </div>
+      </div>
+
       <!-- Grid de cuentas -->
       <div v-if="cargando" class="flex justify-center py-12">
         <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
       </div>
 
-      <div v-else-if="cuentas.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave">
+      <div v-else-if="saldos.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave">
         <i class="pi pi-credit-card text-4xl mb-2 opacity-30" />
         <p class="text-sm mb-4">No hay cuentas registradas</p>
         <button
@@ -39,11 +55,11 @@
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          v-for="cuenta in cuentas"
+          v-for="cuenta in saldos"
           :key="cuenta.id"
           class="glass p-6 group"
         >
-          <!-- Icono y tipo -->
+          <!-- Icono y acciones -->
           <div class="flex items-center justify-between mb-4">
             <div
               class="w-12 h-12 rounded-xl flex items-center justify-center"
@@ -73,10 +89,31 @@
           <p class="texto-glass font-semibold text-lg mb-1">{{ cuenta.nombre }}</p>
           <p class="texto-glass-suave text-xs mb-4">{{ obtenerEtiquetaTipo(cuenta.tipo) }}</p>
 
-          <!-- Saldo -->
+          <!-- Saldo actual -->
           <div style="border-top: 1px solid rgba(255,255,255,0.08)" class="pt-4">
-            <p class="texto-glass-suave text-xs mb-1">Saldo inicial</p>
-            <p class="text-xl font-bold texto-glass">{{ formatearMoneda(cuenta.saldo_inicial) }}</p>
+            <p class="texto-glass-suave text-xs mb-1">Saldo actual</p>
+            <p
+              class="text-2xl font-bold"
+              :class="cuenta.saldo_actual >= 0 ? 'texto-glass' : 'text-red-400'"
+            >
+              {{ formatearMoneda(cuenta.saldo_actual) }}
+            </p>
+
+            <!-- Desglose -->
+            <div class="flex gap-4 mt-3">
+              <div>
+                <p class="text-xs texto-glass-suave">Ingresos</p>
+                <p class="text-sm text-green-400 font-medium">+{{ formatearMoneda(cuenta.total_ingresos) }}</p>
+              </div>
+              <div>
+                <p class="text-xs texto-glass-suave">Gastos</p>
+                <p class="text-sm text-red-400 font-medium">-{{ formatearMoneda(cuenta.total_gastos) }}</p>
+              </div>
+              <div>
+                <p class="text-xs texto-glass-suave">Inicial</p>
+                <p class="text-sm texto-glass font-medium">{{ formatearMoneda(cuenta.saldo_inicial) }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -150,6 +187,7 @@
                 style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
                 :class="errores.saldo_inicial ? 'border-red-400' : 'focus:border-purple-400'"
               />
+              <small class="texto-glass-suave text-xs">El saldo actual se calculará automáticamente con tus transacciones</small>
               <small class="text-red-400" v-if="errores.saldo_inicial">{{ errores.saldo_inicial }}</small>
             </div>
 
@@ -213,7 +251,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
 import { useAutenticacionStore } from '../stores/autenticacion'
@@ -222,7 +260,7 @@ import api from '../servicios/api'
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
 
-const cuentas = ref([])
+const saldos = ref([])
 const cargando = ref(false)
 const guardando = ref(false)
 const dialogoVisible = ref(false)
@@ -242,6 +280,11 @@ const formulario = ref({
   nombre: '',
   tipo: 'bancaria',
   saldo_inicial: 0
+})
+
+// Patrimonio total: suma de saldos actuales de todas las cuentas
+const patrimonioTotal = computed(() => {
+  return saldos.value.reduce((total, cuenta) => total + cuenta.saldo_actual, 0)
 })
 
 function obtenerEtiquetaTipo(tipo) {
@@ -265,11 +308,12 @@ function formatearMoneda(valor) {
   }).format(valor)
 }
 
-async function cargarCuentas() {
+// Carga los saldos de todas las cuentas
+async function cargarSaldos() {
   cargando.value = true
   try {
-    const respuesta = await api.get('/cuentas/')
-    cuentas.value = respuesta.data
+    const respuesta = await api.get('/cuentas/saldos/resumen')
+    saldos.value = respuesta.data
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las cuentas', life: 3000 })
   } finally {
@@ -318,7 +362,7 @@ async function guardarCuenta() {
       toast.add({ severity: 'success', summary: 'Creada', detail: 'Cuenta creada correctamente', life: 3000 })
     }
     dialogoVisible.value = false
-    await cargarCuentas()
+    await cargarSaldos()
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.detail || 'Error al guardar', life: 3000 })
   } finally {
@@ -336,11 +380,11 @@ async function eliminarCuenta() {
     await api.delete(`/cuentas/${cuentaEliminar.value.id}`)
     toast.add({ severity: 'success', summary: 'Eliminada', detail: 'Cuenta eliminada correctamente', life: 3000 })
     dialogoEliminarVisible.value = false
-    await cargarCuentas()
+    await cargarSaldos()
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar la cuenta', life: 3000 })
   }
 }
 
-onMounted(() => cargarCuentas())
+onMounted(() => cargarSaldos())
 </script>
