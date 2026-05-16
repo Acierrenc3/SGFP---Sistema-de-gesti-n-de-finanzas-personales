@@ -5,6 +5,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../servicios/api'
 
+console.log('API URL:', import.meta.env.VITE_API_URL)
+
+
 export const useAutenticacionStore = defineStore('autenticacion', () => {
     // Estado
     const token = ref(localStorage.getItem('token') || null)
@@ -95,3 +98,4 @@ async function iniciarSesion(email, contrasena) {
         cerrarSesion
     }
 })
+
