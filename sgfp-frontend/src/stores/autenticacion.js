@@ -15,31 +15,30 @@ export const useAutenticacionStore = defineStore('autenticacion', () => {
     const estaAutenticado = computed(() => !!token.value)
 
     // Acciones
-    async function iniciarSesion(email, contrasena) {
-        const axios = (await import('axios')).default
+async function iniciarSesion(email, contrasena) {
+    const axios = (await import('axios')).default
 
-        const params = new URLSearchParams()
-        params.append('username', email)
-        params.append('password', contrasena)
+    const params = new URLSearchParams()
+    params.append('username', email)
+    params.append('password', contrasena)
 
-        const respuesta = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/auth/token`,
-            params,
-            {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
+    const respuesta = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/auth/token`,
+        params,
+        {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
-        )
+        }
+    )
 
-        // Guarda ambos tokens
-        token.value = respuesta.data.access_token
-        refreshToken.value = respuesta.data.refresh_token
-        localStorage.setItem('token', token.value)
-        localStorage.setItem('refresh_token', refreshToken.value)
+    token.value = respuesta.data.access_token
+    refreshToken.value = respuesta.data.refresh_token
+    localStorage.setItem('token', token.value)
+    localStorage.setItem('refresh_token', refreshToken.value)
 
-        await obtenerPerfil()
-    }
+    await obtenerPerfil()
+}
 
     async function registrar(nombre, email, contrasena) {
         await api.post('/auth/registro', { nombre, email, contrasena })
@@ -52,7 +51,7 @@ export const useAutenticacionStore = defineStore('autenticacion', () => {
     }
 
     async function renovarToken() {
-        "Renueva el token de acceso usando el refresh token."
+        "Renueva el token de acceso usando el refresh token"
         try {
             const axios = (await import('axios')).default
 
