@@ -17,15 +17,15 @@
     >
       <!-- Logo -->
       <div class="p-6 mb-2" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="/logo.png" alt="SGFP Logo" class="w-10 h-10 rounded-xl object-cover" />
-            <div>
-              <h1 class="text-xl font-bold texto-glass">SGFP</h1>
-              <p class="text-xs texto-glass-suave">Finanzas Personales</p>
-            </div>
+        <div class="flex flex-col items-center gap-3 mb-3">
+          <img src="/logo.png" alt="SGFP Logo" class="w-24 h-24 rounded-2xl object-cover"
+            style="box-shadow: 0 4px 16px rgba(124,58,237,0.3)" />
+          <div class="text-center">
+            <h1 class="text-xl font-bold texto-glass">SGFP</h1>
+            <p class="text-xs texto-glass-suave">Finanzas Personales</p>
           </div>
-          <!-- Notificaciones escritorio -->
+        </div>
+        <div class="flex justify-end">
           <PanelNotificaciones />
         </div>
       </div>
