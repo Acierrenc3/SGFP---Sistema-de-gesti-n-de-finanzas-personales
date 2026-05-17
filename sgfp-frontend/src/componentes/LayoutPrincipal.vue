@@ -161,7 +161,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useAutenticacionStore } from '../stores/autenticacion'
