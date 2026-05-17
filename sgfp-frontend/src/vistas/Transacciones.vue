@@ -4,7 +4,7 @@
   <LayoutPrincipal>
     <div class="p-6">
       <!-- Cabecera -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center justify-between mb-8 animar-lateral">
         <div>
           <h2 class="text-2xl font-bold texto-glass">Transacciones</h2>
           <p class="texto-glass-suave text-sm mt-1">Gestiona tus ingresos y gastos</p>
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Filtros -->
-      <div class="glass p-4 mb-4">
+      <div class="glass p-4 mb-4 animar-entrada">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <select
             v-model="filtros.tipo"
@@ -64,7 +64,7 @@
       </div>
 
       <!-- Tabla de transacciones -->
-      <div class="glass overflow-hidden">
+      <div class="glass overflow-hidden animar-entrada">
         <!-- Cabecera tabla -->
         <div class="grid grid-cols-5 px-6 py-3 text-xs font-medium texto-glass-suave uppercase tracking-wider"
           style="border-bottom: 1px solid rgba(255,255,255,0.08)">
@@ -75,21 +75,23 @@
           <span class="text-right">Importe</span>
         </div>
 
-        <!-- Filas -->
+        <!-- Cargando -->
         <div v-if="cargando" class="flex justify-center py-12">
           <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
         </div>
 
+        <!-- Sin datos -->
         <div v-else-if="transacciones.length === 0" class="flex flex-col items-center py-12 texto-glass-suave">
           <i class="pi pi-inbox text-4xl mb-2 opacity-30" />
           <p class="text-sm">No hay transacciones registradas</p>
         </div>
 
+        <!-- Filas -->
         <div
           v-else
           v-for="transaccion in transacciones"
           :key="transaccion.id"
-          class="grid grid-cols-5 px-6 py-4 items-center transition-all hover:bg-white/5 group"
+          class="grid grid-cols-5 px-6 py-4 items-center transition-all hover:bg-white/5 group animar-entrada"
           style="border-bottom: 1px solid rgba(255,255,255,0.05)"
         >
           <span class="texto-glass text-sm">{{ formatearFecha(transaccion.fecha) }}</span>
@@ -106,7 +108,6 @@
           </span>
 
           <span class="texto-glass text-sm truncate">{{ transaccion.descripcion || '-' }}</span>
-
           <span class="texto-glass-suave text-sm">{{ obtenerNombreCategoria(transaccion.id_categoria) }}</span>
 
           <div class="flex items-center justify-end gap-3">
@@ -143,7 +144,7 @@
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
         @click.self="dialogoVisible = false"
       >
-        <div class="glass w-full max-w-lg p-6">
+        <div class="glass w-full max-w-lg p-6 animar-dialogo">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold texto-glass">
               {{ transaccionEditando ? 'Editar transacción' : 'Nueva transacción' }}
@@ -284,7 +285,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
       >
-        <div class="glass w-full max-w-sm p-6 text-center">
+        <div class="glass w-full max-w-sm p-6 text-center animar-dialogo">
           <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
             style="background: rgba(239,68,68,0.15)">
             <i class="pi pi-exclamation-triangle text-red-400 text-2xl" />

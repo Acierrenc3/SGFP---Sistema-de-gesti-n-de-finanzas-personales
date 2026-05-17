@@ -93,6 +93,37 @@
             </div>
           </div>
         </div>
+        <!-- Diálogo confirmar cerrar sesión -->
+        <div
+          v-if="dialogoCerrarSesion"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+        >
+          <div class="glass w-full max-w-sm p-6 text-center">
+            <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+              style="background: rgba(239,68,68,0.15)">
+              <i class="pi pi-sign-out text-red-400 text-2xl" />
+            </div>
+            <h3 class="text-lg font-bold texto-glass mb-2">¿Cerrar sesión?</h3>
+            <p class="texto-glass-suave text-sm mb-6">Tu sesión se cerrará y tendrás que volver a iniciar sesión.</p>
+            <div class="flex gap-3">
+              <button
+                @click="dialogoCerrarSesion = false"
+                class="flex-1 py-2 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
+              >
+                Cancelar
+              </button>
+              <button
+                @click="confirmarCerrarSesion"
+                class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                style="background: linear-gradient(135deg, #ef4444, #dc2626)"
+              >
+                Sí, cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <slot />
@@ -160,7 +191,14 @@ function esRutaActiva(rutaItem) {
   return ruta.path === rutaItem
 }
 
+const dialogoCerrarSesion = ref(false)
+
 function cerrarSesion() {
+  dialogoCerrarSesion.value = true
+}
+
+function confirmarCerrarSesion() {
+  dialogoCerrarSesion.value = false
   autenticacion.cerrarSesion()
   toast.add({
     severity: 'info',

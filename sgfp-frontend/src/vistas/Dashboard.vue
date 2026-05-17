@@ -4,7 +4,7 @@
   <LayoutPrincipal>
     <div class="p-6">
       <!-- Cabecera -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center justify-between mb-8 animar-lateral">
         <div>
           <h2 class="text-2xl font-bold texto-glass">Dashboard</h2>
           <p class="texto-glass-suave text-sm mt-1">Resumen de tus finanzas</p>
@@ -38,7 +38,7 @@
       <!-- Tarjetas de resumen -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <!-- Ingresos -->
-        <div class="glass p-6">
+        <div class="glass p-6 animar-entrada">
           <div class="flex items-center justify-between">
             <div>
               <p class="texto-glass-suave text-sm mb-1">Ingresos</p>
@@ -54,7 +54,7 @@
         </div>
 
         <!-- Gastos -->
-        <div class="glass p-6">
+        <div class="glass p-6 animar-entrada">
           <div class="flex items-center justify-between">
             <div>
               <p class="texto-glass-suave text-sm mb-1">Gastos</p>
@@ -70,7 +70,7 @@
         </div>
 
         <!-- Balance -->
-        <div class="glass p-6">
+        <div class="glass p-6 animar-entrada">
           <div class="flex items-center justify-between">
             <div>
               <p class="texto-glass-suave text-sm mb-1">Balance</p>
@@ -92,7 +92,7 @@
       <!-- Gráficos -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <!-- Gastos por categoría -->
-        <div class="glass p-6">
+        <div class="glass p-6 animar-entrada">
           <h3 class="texto-glass font-semibold mb-4">Gastos por categoría</h3>
           <Chart
             v-if="datosCategorias.labels.length"
@@ -108,7 +108,7 @@
         </div>
 
         <!-- Evolución mensual -->
-        <div class="glass p-6">
+        <div class="glass p-6 animar-entrada">
           <h3 class="texto-glass font-semibold mb-4">Evolución mensual</h3>
           <Chart
             v-if="datosEvolucion.labels.length"
@@ -125,7 +125,7 @@
       </div>
 
       <!-- Presupuestos -->
-      <div class="glass p-6" v-if="resumen?.resumen_presupuestos?.length">
+      <div class="glass p-6 animar-entrada" v-if="resumen?.resumen_presupuestos?.length">
         <h3 class="texto-glass font-semibold mb-4">Estado de presupuestos</h3>
         <div class="flex flex-col gap-4">
           <div
@@ -139,10 +139,9 @@
                 {{ formatearMoneda(presupuesto.importe_limite) }}
               </span>
             </div>
-            <!-- Barra de progreso personalizada -->
             <div class="w-full h-2 rounded-full" style="background: rgba(255,255,255,0.1)">
               <div
-                class="h-2 rounded-full transition-all"
+                class="h-2 rounded-full animar-progreso"
                 :style="{
                   width: `${Math.min(presupuesto.porcentaje_usado, 100)}%`,
                   background: presupuesto.porcentaje_usado >= 100

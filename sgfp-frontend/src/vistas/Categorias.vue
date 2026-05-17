@@ -4,7 +4,7 @@
   <LayoutPrincipal>
     <div class="p-6">
       <!-- Cabecera -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center justify-between mb-8 animar-lateral">
         <div>
           <h2 class="text-2xl font-bold texto-glass">Categorías</h2>
           <p class="texto-glass-suave text-sm mt-1">Gestiona tus categorías de transacciones</p>
@@ -24,7 +24,7 @@
         <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
       </div>
 
-      <div v-else-if="categorias.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave">
+      <div v-else-if="categorias.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave animar-entrada">
         <i class="pi pi-tag text-4xl mb-2 opacity-30" />
         <p class="text-sm">No hay categorías registradas</p>
       </div>
@@ -33,7 +33,7 @@
         <div
           v-for="categoria in categorias"
           :key="categoria.id"
-          class="glass p-5 group"
+          class="glass p-5 group animar-entrada"
         >
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -99,7 +99,7 @@
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
         @click.self="dialogoVisible = false"
       >
-        <div class="glass w-full max-w-md p-6">
+        <div class="glass w-full max-w-md p-6 animar-dialogo">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold texto-glass">
               {{ categoriaEditando ? 'Editar categoría' : 'Nueva categoría' }}
@@ -114,7 +114,6 @@
           </div>
 
           <form @submit.prevent="guardarCategoria" class="flex flex-col gap-4">
-            <!-- Nombre -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Nombre</label>
               <input
@@ -128,7 +127,6 @@
               <small class="text-red-400" v-if="errores.nombre">{{ errores.nombre }}</small>
             </div>
 
-            <!-- Tipo -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Tipo</label>
               <div class="flex gap-2">
@@ -149,7 +147,6 @@
               </div>
             </div>
 
-            <!-- Icono -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Icono (opcional)</label>
               <input
@@ -162,7 +159,6 @@
               <small class="texto-glass-suave text-xs">Usa nombres de PrimeIcons sin el prefijo 'pi'</small>
             </div>
 
-            <!-- Color -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Color (opcional)</label>
               <div class="flex items-center gap-3">
@@ -176,7 +172,6 @@
               </div>
             </div>
 
-            <!-- Botones -->
             <div class="flex gap-3 mt-2">
               <button
                 type="button"
@@ -206,7 +201,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
       >
-        <div class="glass w-full max-w-sm p-6 text-center">
+        <div class="glass w-full max-w-sm p-6 text-center animar-dialogo">
           <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
             style="background: rgba(239,68,68,0.15)">
             <i class="pi pi-exclamation-triangle text-red-400 text-2xl" />
