@@ -15,7 +15,6 @@
     <!-- Tarjeta glass -->
     <div class="glass w-full max-w-md p-8 relative z-10">
       <!-- Logo -->
-      <div class="text-center mb-8">
         <img
           src="/logo.png"
           alt="SGFP Logo"
@@ -24,7 +23,6 @@
         />
         <h1 class="text-3xl font-bold texto-glass">SGFP</h1>
         <p class="texto-glass-suave mt-1">Sistema de Gestión de Finanzas Personales</p>
-      </div>
 
       <!-- Formulario -->
       <form @submit.prevent="enviarFormulario" class="flex flex-col gap-5">
