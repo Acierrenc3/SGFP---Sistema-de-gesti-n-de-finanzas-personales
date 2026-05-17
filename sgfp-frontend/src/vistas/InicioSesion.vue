@@ -19,7 +19,7 @@
         <img
           src="/logo.png"
           alt="SGFP Logo"
-          class="w-20 h-20 rounded-2xl object-cover mx-auto mb-4"
+          class="w-60 h-60 rounded-2xl object-cover mx-auto mb-4"
           style="box-shadow: 0 8px 32px rgba(124,58,237,0.3)"
         />
         <h1 class="text-3xl font-bold texto-glass">SGFP</h1>
