@@ -1,13 +1,11 @@
-<!-- Vista de presupuestos con estilo Glassmorphism -->
-
 <template>
   <LayoutPrincipal>
     <div class="p-6">
       <!-- Cabecera -->
       <div class="flex items-center justify-between mb-8 animar-lateral">
         <div>
-          <h2 class="text-2xl font-bold texto-glass">Categorías</h2>
-          <p class="texto-glass-suave text-sm mt-1">Gestiona tus categorías de transacciones</p>
+          <h2 class="text-2xl font-bold texto-glass">Presupuestos</h2>
+          <p class="texto-glass-suave text-sm mt-1">Gestiona tus límites de gasto mensuales</p>
         </div>
         <button
           @click="abrirDialogo()"
@@ -15,79 +13,113 @@
           style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
         >
           <i class="pi pi-plus" />
-          Nueva categoría
+          Nuevo presupuesto
         </button>
       </div>
 
-      <!-- Grid de categorías -->
+      <!-- Filtros -->
+      <div class="glass p-4 mb-4 animar-entrada">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <select
+            v-model="filtros.mes"
+            @change="cargarPresupuestos"
+            class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
+            style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+          >
+            <option value="" class="bg-gray-900">Todos los meses</option>
+            <option v-for="mes in meses" :key="mes.valor" :value="mes.valor" class="bg-gray-900">
+              {{ mes.etiqueta }}
+            </option>
+          </select>
+          <select
+            v-model="filtros.anio"
+            @change="cargarPresupuestos"
+            class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
+            style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+          >
+            <option value="" class="bg-gray-900">Todos los años</option>
+            <option v-for="anio in anios" :key="anio" :value="anio" class="bg-gray-900">
+              {{ anio }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid de presupuestos -->
       <div v-if="cargando" class="flex justify-center py-12">
         <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
       </div>
 
-      <div v-else-if="categorias.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave animar-entrada">
-        <i class="pi pi-tag text-4xl mb-2 opacity-30" />
-        <p class="text-sm">No hay categorías registradas</p>
+      <div v-else-if="presupuestos.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave animar-entrada">
+        <i class="pi pi-wallet text-4xl mb-2 opacity-30" />
+        <p class="text-sm">No hay presupuestos registrados</p>
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          v-for="categoria in categorias"
-          :key="categoria.id"
+          v-for="presupuesto in presupuestos"
+          :key="presupuesto.id"
           class="glass p-5 group animar-entrada"
         >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div
-                class="w-10 h-10 rounded-xl flex items-center justify-center"
-                :style="categoria.color
-                  ? `background: ${categoria.color}25; border: 1px solid ${categoria.color}50`
-                  : 'background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)'"
-              >
-                <i
-                  :class="categoria.icono ? `pi ${categoria.icono}` : 'pi pi-tag'"
-                  :style="categoria.color ? `color: ${categoria.color}` : 'color: rgba(255,255,255,0.5)'"
-                />
-              </div>
-              <div>
-                <p class="texto-glass font-medium text-sm">{{ categoria.nombre }}</p>
-                <span
-                  class="text-xs px-2 py-0.5 rounded-lg"
-                  :style="categoria.tipo === 'ingreso'
-                    ? 'background: rgba(74,222,128,0.15); color: #4ade80'
-                    : 'background: rgba(248,113,113,0.15); color: #f87171'"
-                >
-                  {{ categoria.tipo === 'ingreso' ? 'Ingreso' : 'Gasto' }}
-                </span>
-              </div>
+          <!-- Cabecera tarjeta -->
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="texto-glass font-medium text-sm">{{ obtenerNombreCategoria(presupuesto.id_categoria) }}</p>
+              <p class="texto-glass-suave text-xs mt-0.5">
+                {{ obtenerNombreMes(presupuesto.mes) }} {{ presupuesto.anio }}
+              </p>
             </div>
-
-            <div
-              v-if="categoria.id_usuario"
-              class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
+            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                @click="abrirDialogo(categoria)"
+                @click="abrirDialogo(presupuesto)"
                 class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
                 style="background: rgba(255,255,255,0.08)"
               >
                 <i class="pi pi-pencil text-xs" />
               </button>
               <button
-                @click="confirmarEliminar(categoria)"
+                @click="confirmarEliminar(presupuesto)"
                 class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
                 style="background: rgba(255,255,255,0.08)"
               >
                 <i class="pi pi-trash text-xs" />
               </button>
             </div>
+          </div>
 
-            <span
-              v-else
-              class="text-xs px-2 py-0.5 rounded-lg texto-glass-suave"
-              style="background: rgba(255,255,255,0.08)"
+          <!-- Importe límite -->
+          <p class="text-2xl font-bold texto-glass mb-3">
+            {{ formatearMoneda(presupuesto.importe_limite) }}
+          </p>
+
+          <!-- Barra de progreso real -->
+          <div class="w-full h-1.5 rounded-full mt-3" style="background: rgba(255,255,255,0.1)">
+            <div
+              class="h-1.5 rounded-full animar-progreso"
+              :style="{
+                width: `${Math.min(gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0, 100)}%`,
+                background: (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 100
+                  ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                  : (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 80
+                  ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                  : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
+              }"
+            />
+          </div>
+          <div class="flex justify-between mt-1">
+            <p class="texto-glass-suave text-xs">
+              {{ formatearMoneda(gastosReales[presupuesto.id_categoria]?.gasto_actual || 0) }} gastado
+            </p>
+            <p
+              class="text-xs font-medium"
+              :style="(gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 100
+                ? 'color: #f87171'
+                : (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 80
+                ? 'color: #fbbf24'
+                : 'color: rgba(255,255,255,0.5)'"
             >
-              Predefinida
-            </span>
+              {{ (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0).toFixed(1) }}%
+            </p>
           </div>
         </div>
       </div>
@@ -102,7 +134,7 @@
         <div class="glass w-full max-w-md p-6 animar-dialogo">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold texto-glass">
-              {{ categoriaEditando ? 'Editar categoría' : 'Nueva categoría' }}
+              {{ presupuestoEditando ? 'Editar presupuesto' : 'Nuevo presupuesto' }}
             </h3>
             <button
               @click="dialogoVisible = false"
@@ -113,63 +145,68 @@
             </button>
           </div>
 
-          <form @submit.prevent="guardarCategoria" class="flex flex-col gap-4">
+          <form @submit.prevent="guardarPresupuesto" class="flex flex-col gap-4">
             <div class="flex flex-col gap-2">
-              <label class="texto-glass text-sm font-medium">Nombre</label>
+              <label class="texto-glass text-sm font-medium">Categoría</label>
+              <select
+                v-model="formulario.id_categoria"
+                class="w-full px-4 py-3 rounded-xl text-white outline-none cursor-pointer"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                :class="errores.id_categoria ? 'border-red-400' : 'focus:border-purple-400'"
+              >
+                <option value="" class="bg-gray-900">Selecciona una categoría</option>
+                <option v-for="cat in categorias" :key="cat.id" :value="cat.id" class="bg-gray-900">
+                  {{ cat.nombre }}
+                </option>
+              </select>
+              <small class="text-red-400" v-if="errores.id_categoria">{{ errores.id_categoria }}</small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Mes</label>
+              <select
+                v-model="formulario.mes"
+                class="w-full px-4 py-3 rounded-xl text-white outline-none cursor-pointer"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                :class="errores.mes ? 'border-red-400' : 'focus:border-purple-400'"
+              >
+                <option value="" class="bg-gray-900">Selecciona un mes</option>
+                <option v-for="mes in meses" :key="mes.valor" :value="mes.valor" class="bg-gray-900">
+                  {{ mes.etiqueta }}
+                </option>
+              </select>
+              <small class="text-red-400" v-if="errores.mes">{{ errores.mes }}</small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Año</label>
+              <select
+                v-model="formulario.anio"
+                class="w-full px-4 py-3 rounded-xl text-white outline-none cursor-pointer"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                :class="errores.anio ? 'border-red-400' : 'focus:border-purple-400'"
+              >
+                <option value="" class="bg-gray-900">Selecciona un año</option>
+                <option v-for="anio in anios" :key="anio" :value="anio" class="bg-gray-900">
+                  {{ anio }}
+                </option>
+              </select>
+              <small class="text-red-400" v-if="errores.anio">{{ errores.anio }}</small>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Importe límite</label>
               <input
-                v-model="formulario.nombre"
-                type="text"
-                placeholder="Nombre de la categoría"
+                v-model="formulario.importe_limite"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
                 class="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
                 style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
-                :class="errores.nombre ? 'border-red-400' : 'focus:border-purple-400'"
+                :class="errores.importe_limite ? 'border-red-400' : 'focus:border-purple-400'"
               />
-              <small class="text-red-400" v-if="errores.nombre">{{ errores.nombre }}</small>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label class="texto-glass text-sm font-medium">Tipo</label>
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  v-for="tipo in tiposCategoria"
-                  :key="tipo.valor"
-                  @click="formulario.tipo = tipo.valor"
-                  class="flex-1 py-2 rounded-xl text-sm font-medium transition-all"
-                  :style="formulario.tipo === tipo.valor
-                    ? tipo.valor === 'ingreso'
-                      ? 'background: rgba(74,222,128,0.2); color: #4ade80; border: 1px solid rgba(74,222,128,0.4)'
-                      : 'background: rgba(248,113,113,0.2); color: #f87171; border: 1px solid rgba(248,113,113,0.4)'
-                    : 'background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1)'"
-                >
-                  {{ tipo.etiqueta }}
-                </button>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label class="texto-glass text-sm font-medium">Icono (opcional)</label>
-              <input
-                v-model="formulario.icono"
-                type="text"
-                placeholder="Ej: pi-shopping-cart"
-                class="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
-              />
-              <small class="texto-glass-suave text-xs">Usa nombres de PrimeIcons sin el prefijo 'pi'</small>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label class="texto-glass text-sm font-medium">Color (opcional)</label>
-              <div class="flex items-center gap-3">
-                <input
-                  v-model="formulario.color"
-                  type="color"
-                  class="w-10 h-10 rounded-xl cursor-pointer border-0 outline-none"
-                  style="background: rgba(255,255,255,0.08)"
-                />
-                <span class="texto-glass-suave text-sm">{{ formulario.color || 'Sin color' }}</span>
-              </div>
+              <small class="text-red-400" v-if="errores.importe_limite">{{ errores.importe_limite }}</small>
             </div>
 
             <div class="flex gap-3 mt-2">
@@ -187,7 +224,7 @@
                 class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
                 style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
               >
-                <span v-if="!guardando">{{ categoriaEditando ? 'Guardar cambios' : 'Crear categoría' }}</span>
+                <span v-if="!guardando">{{ presupuestoEditando ? 'Guardar cambios' : 'Crear presupuesto' }}</span>
                 <i v-else class="pi pi-spin pi-spinner" />
               </button>
             </div>
@@ -206,7 +243,7 @@
             style="background: rgba(239,68,68,0.15)">
             <i class="pi pi-exclamation-triangle text-red-400 text-2xl" />
           </div>
-          <h3 class="text-lg font-bold texto-glass mb-2">¿Eliminar categoría?</h3>
+          <h3 class="text-lg font-bold texto-glass mb-2">¿Eliminar presupuesto?</h3>
           <p class="texto-glass-suave text-sm mb-6">Esta acción no se puede deshacer.</p>
           <div class="flex gap-3">
             <button
@@ -217,7 +254,7 @@
               Cancelar
             </button>
             <button
-              @click="eliminarCategoria"
+              @click="eliminarPresupuesto"
               class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
               style="background: linear-gradient(135deg, #ef4444, #dc2626)"
             >
@@ -229,181 +266,3 @@
     </div>
   </LayoutPrincipal>
 </template>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useToast } from 'primevue/usetoast'
-import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
-import { useAutenticacionStore } from '../stores/autenticacion'
-import api from '../servicios/api'
-
-const toast = useToast()
-const autenticacion = useAutenticacionStore()
-
-const presupuestos = ref([])
-const categorias = ref([])
-const cargando = ref(false)
-const guardando = ref(false)
-const dialogoVisible = ref(false)
-const dialogoEliminarVisible = ref(false)
-const presupuestoEditando = ref(null)
-const presupuestoEliminar = ref(null)
-const errores = ref({})
-const gastosReales = ref({})
-
-const meses = [
-  { etiqueta: 'Enero', valor: 1 }, { etiqueta: 'Febrero', valor: 2 },
-  { etiqueta: 'Marzo', valor: 3 }, { etiqueta: 'Abril', valor: 4 },
-  { etiqueta: 'Mayo', valor: 5 }, { etiqueta: 'Junio', valor: 6 },
-  { etiqueta: 'Julio', valor: 7 }, { etiqueta: 'Agosto', valor: 8 },
-  { etiqueta: 'Septiembre', valor: 9 }, { etiqueta: 'Octubre', valor: 10 },
-  { etiqueta: 'Noviembre', valor: 11 }, { etiqueta: 'Diciembre', valor: 12 }
-]
-
-const anios = computed(() => {
-  const anioActual = new Date().getFullYear()
-  return Array.from({ length: 5 }, (_, i) => anioActual - i)
-})
-
-const formulario = ref({
-  id_categoria: '',
-  mes: new Date().getMonth() + 1,
-  anio: new Date().getFullYear(),
-  importe_limite: ''
-})
-
-const filtros = ref({ mes: '', anio: '' })
-
-function obtenerNombreCategoria(id) {
-  return categorias.value.find(c => c.id === id)?.nombre || '-'
-}
-
-function obtenerNombreMes(numero) {
-  return meses.find(m => m.valor === numero)?.etiqueta || '-'
-}
-
-function formatearMoneda(valor) {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: autenticacion.usuario?.moneda || 'EUR'
-  }).format(valor)
-}
-
-async function cargarGastosReales() {
-  try {
-    const ahora = new Date()
-    const mes = filtros.value.mes || ahora.getMonth() + 1
-    const anio = filtros.value.anio || ahora.getFullYear()
-
-    const respuesta = await api.get('/dashboard/resumen', {
-      params: { mes, anio }
-    })
-
-    const mapaGastos = {}
-    respuesta.data.resumen_presupuestos.forEach(p => {
-      mapaGastos[p.id_categoria] = {
-        gasto_actual: p.gasto_actual,
-        porcentaje_usado: p.porcentaje_usado
-      }
-    })
-    gastosReales.value = mapaGastos
-  } catch {
-    // Si falla no bloqueamos la vista
-  }
-}
-
-async function cargarPresupuestos() {
-  cargando.value = true
-  try {
-    const params = {}
-    if (filtros.value.mes) params.mes = filtros.value.mes
-    if (filtros.value.anio) params.anio = filtros.value.anio
-    const respuesta = await api.get('/presupuestos/', { params })
-    presupuestos.value = respuesta.data
-    await cargarGastosReales()
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los presupuestos', life: 3000 })
-  } finally {
-    cargando.value = false
-  }
-}
-
-async function cargarCategorias() {
-  const respuesta = await api.get('/categorias/', { params: { tipo: 'gasto' } })
-  categorias.value = respuesta.data
-}
-
-function abrirDialogo(presupuesto = null) {
-  errores.value = {}
-  presupuestoEditando.value = presupuesto
-  if (presupuesto) {
-    formulario.value = {
-      id_categoria: presupuesto.id_categoria,
-      mes: presupuesto.mes,
-      anio: presupuesto.anio,
-      importe_limite: presupuesto.importe_limite
-    }
-  } else {
-    formulario.value = {
-      id_categoria: '',
-      mes: new Date().getMonth() + 1,
-      anio: new Date().getFullYear(),
-      importe_limite: ''
-    }
-  }
-  dialogoVisible.value = true
-}
-
-function validar() {
-  errores.value = {}
-  if (!formulario.value.id_categoria) errores.value.id_categoria = 'La categoría es obligatoria'
-  if (!formulario.value.mes) errores.value.mes = 'El mes es obligatorio'
-  if (!formulario.value.anio) errores.value.anio = 'El año es obligatorio'
-  if (!formulario.value.importe_limite) errores.value.importe_limite = 'El importe límite es obligatorio'
-  return Object.keys(errores.value).length === 0
-}
-
-async function guardarPresupuesto() {
-  if (!validar()) return
-  guardando.value = true
-  try {
-    const datos = {
-      ...formulario.value,
-      importe_limite: parseFloat(formulario.value.importe_limite)
-    }
-    if (presupuestoEditando.value) {
-      await api.put(`/presupuestos/${presupuestoEditando.value.id}`, datos)
-      toast.add({ severity: 'success', summary: 'Actualizado', detail: 'Presupuesto actualizado correctamente', life: 3000 })
-    } else {
-      await api.post('/presupuestos/', datos)
-      toast.add({ severity: 'success', summary: 'Creado', detail: 'Presupuesto creado correctamente', life: 3000 })
-    }
-    dialogoVisible.value = false
-    await cargarPresupuestos()
-  } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.detail || 'Error al guardar', life: 3000 })
-  } finally {
-    guardando.value = false
-  }
-}
-
-function confirmarEliminar(presupuesto) {
-  presupuestoEliminar.value = presupuesto
-  dialogoEliminarVisible.value = true
-}
-
-async function eliminarPresupuesto() {
-  try {
-    await api.delete(`/presupuestos/${presupuestoEliminar.value.id}`)
-    toast.add({ severity: 'success', summary: 'Eliminado', detail: 'Presupuesto eliminado correctamente', life: 3000 })
-    dialogoEliminarVisible.value = false
-    await cargarPresupuestos()
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el presupuesto', life: 3000 })
-  }
-}
-
-onMounted(async () => {
-  await Promise.all([cargarPresupuestos(), cargarCategorias()])
-})
-</script>
