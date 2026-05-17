@@ -17,15 +17,16 @@
     >
       <!-- Logo -->
       <div class="p-6 mb-2" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
-            <i class="pi pi-wallet text-white text-lg" />
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img src="/logo.png" alt="SGFP Logo" class="w-10 h-10 rounded-xl object-cover" />
+            <div>
+              <h1 class="text-xl font-bold texto-glass">SGFP</h1>
+              <p class="text-xs texto-glass-suave">Finanzas Personales</p>
+            </div>
           </div>
-          <div>
-            <h1 class="text-xl font-bold texto-glass">SGFP</h1>
-            <p class="text-xs texto-glass-suave">Finanzas Personales</p>
-          </div>
+          <!-- Notificaciones escritorio -->
+          <PanelNotificaciones />
         </div>
       </div>
 
@@ -78,17 +79,18 @@
         style="background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08)"
       >
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center"
-            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
-            <i class="pi pi-wallet text-white text-sm" />
-          </div>
+          <img src="/logo.png" alt="SGFP Logo" class="w-8 h-8 rounded-lg object-cover" />
           <span class="font-bold texto-glass">SGFP</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="texto-glass-suave text-sm">{{ autenticacion.usuario?.nombre }}</span>
-          <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
-            {{ inicialUsuario }}
+        <div class="flex items-center gap-3">
+          <!-- Notificaciones móvil -->
+          <PanelNotificaciones />
+          <div class="flex items-center gap-2">
+            <span class="texto-glass-suave text-sm hidden sm:block">{{ autenticacion.usuario?.nombre }}</span>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
+              {{ inicialUsuario }}
+            </div>
           </div>
         </div>
       </div>
@@ -128,15 +130,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useAutenticacionStore } from '../stores/autenticacion'
+import { useNotificacionesStore } from '../stores/notificaciones'
+import PanelNotificaciones from './PanelNotificaciones.vue'
 
 const ruta = useRoute()
 const enrutador = useRouter()
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
+const notificacionesStore = useNotificacionesStore()
 
 const menuItems = [
   { etiqueta: 'Dashboard', etiquetaCorta: 'Inicio', ruta: '/dashboard', icono: 'pi pi-home' },
@@ -157,7 +162,16 @@ function esRutaActiva(rutaItem) {
 
 function cerrarSesion() {
   autenticacion.cerrarSesion()
-  toast.add({ severity: 'info', summary: 'Sesión cerrada', detail: 'Has cerrado sesión correctamente', life: 3000 })
+  toast.add({
+    severity: 'info',
+    summary: 'Sesión cerrada',
+    detail: 'Has cerrado sesión correctamente',
+    life: 3000
+  })
   enrutador.push({ name: 'InicioSesion' })
 }
+
+onMounted(() => {
+  notificacionesStore.verificarPresupuestos()
+})
 </script>

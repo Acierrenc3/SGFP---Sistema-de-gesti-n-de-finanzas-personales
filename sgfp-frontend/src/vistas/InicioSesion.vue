@@ -16,10 +16,12 @@
     <div class="glass w-full max-w-md p-8 relative z-10">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
-          <i class="pi pi-wallet text-white text-2xl" />
-        </div>
+        <img
+          src="/logo.png"
+          alt="SGFP Logo"
+          class="w-20 h-20 rounded-2xl object-cover mx-auto mb-4"
+          style="box-shadow: 0 8px 32px rgba(124,58,237,0.3)"
+        />
         <h1 class="text-3xl font-bold texto-glass">SGFP</h1>
         <p class="texto-glass-suave mt-1">Sistema de Gestión de Finanzas Personales</p>
       </div>
@@ -131,7 +133,12 @@ async function enviarFormulario() {
 
   try {
     await autenticacion.iniciarSesion(formulario.value.email, formulario.value.contrasena)
-    toast.add({ severity: 'success', summary: 'Bienvenido', detail: 'Sesión iniciada correctamente', life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: 'Bienvenido',
+      detail: 'Sesión iniciada correctamente',
+      life: 3000
+    })
     enrutador.push({ name: 'Dashboard' })
   } catch (error) {
     errorGeneral.value = error.response?.data?.detail || 'Error al iniciar sesión'
