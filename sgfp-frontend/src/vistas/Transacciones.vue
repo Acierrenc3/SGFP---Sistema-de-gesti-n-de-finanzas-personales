@@ -63,10 +63,10 @@
         </div>
       </div>
 
-      <!-- Tabla de transacciones -->
+      <!-- Tabla desktop / Tarjetas móvil -->
       <div class="glass overflow-hidden animar-entrada">
-        <!-- Cabecera tabla -->
-        <div class="grid grid-cols-5 px-6 py-3 text-xs font-medium texto-glass-suave uppercase tracking-wider"
+        <!-- Cabecera tabla (solo desktop) -->
+        <div class="hidden md:grid grid-cols-5 px-6 py-3 text-xs font-medium texto-glass-suave uppercase tracking-wider"
           style="border-bottom: 1px solid rgba(255,255,255,0.08)">
           <span>Fecha</span>
           <span>Tipo</span>
@@ -86,55 +86,111 @@
           <p class="text-sm">No hay transacciones registradas</p>
         </div>
 
-        <!-- Filas -->
-        <div
-          v-else
-          v-for="transaccion in transacciones"
-          :key="transaccion.id"
-          class="grid grid-cols-5 px-6 py-4 items-center transition-all hover:bg-white/5 group animar-entrada"
-          style="border-bottom: 1px solid rgba(255,255,255,0.05)"
-        >
-          <span class="texto-glass text-sm">{{ formatearFecha(transaccion.fecha) }}</span>
-
-          <span>
-            <span
-              class="px-2 py-1 rounded-lg text-xs font-medium"
-              :style="transaccion.tipo === 'ingreso'
-                ? 'background: rgba(74,222,128,0.15); color: #4ade80'
-                : 'background: rgba(248,113,113,0.15); color: #f87171'"
-            >
-              {{ transaccion.tipo === 'ingreso' ? 'Ingreso' : 'Gasto' }}
-            </span>
-          </span>
-
-          <span class="texto-glass text-sm truncate">{{ transaccion.descripcion || '-' }}</span>
-          <span class="texto-glass-suave text-sm">{{ obtenerNombreCategoria(transaccion.id_categoria) }}</span>
-
-          <div class="flex items-center justify-end gap-3">
-            <span
-              class="font-bold text-sm"
-              :class="transaccion.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
-            >
-              {{ transaccion.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(transaccion.importe) }}
-            </span>
-            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                @click="abrirDialogo(transaccion)"
-                class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
-                style="background: rgba(255,255,255,0.08)"
+        <template v-else>
+          <!-- Vista desktop -->
+          <div
+            v-for="transaccion in transacciones"
+            :key="transaccion.id"
+            class="hidden md:grid grid-cols-5 px-6 py-4 items-center transition-all hover:bg-white/5 group animar-entrada"
+            style="border-bottom: 1px solid rgba(255,255,255,0.05)"
+          >
+            <span class="texto-glass text-sm">{{ formatearFecha(transaccion.fecha) }}</span>
+            <span>
+              <span
+                class="px-2 py-1 rounded-lg text-xs font-medium"
+                :style="transaccion.tipo === 'ingreso'
+                  ? 'background: rgba(74,222,128,0.15); color: #4ade80'
+                  : 'background: rgba(248,113,113,0.15); color: #f87171'"
               >
-                <i class="pi pi-pencil text-xs" />
-              </button>
-              <button
-                @click="confirmarEliminar(transaccion)"
-                class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
-                style="background: rgba(255,255,255,0.08)"
+                {{ transaccion.tipo === 'ingreso' ? 'Ingreso' : 'Gasto' }}
+              </span>
+            </span>
+            <span class="texto-glass text-sm truncate">{{ transaccion.descripcion || '-' }}</span>
+            <span class="texto-glass-suave text-sm">{{ obtenerNombreCategoria(transaccion.id_categoria) }}</span>
+            <div class="flex items-center justify-end gap-3">
+              <span
+                class="font-bold text-sm"
+                :class="transaccion.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
               >
-                <i class="pi pi-trash text-xs" />
-              </button>
+                {{ transaccion.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(transaccion.importe) }}
+              </span>
+              <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  @click="abrirDialogo(transaccion)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+                  style="background: rgba(255,255,255,0.08)"
+                >
+                  <i class="pi pi-pencil text-xs" />
+                </button>
+                <button
+                  @click="confirmarEliminar(transaccion)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
+                  style="background: rgba(255,255,255,0.08)"
+                >
+                  <i class="pi pi-trash text-xs" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          <!-- Vista móvil (tarjetas) -->
+          <div
+            v-for="transaccion in transacciones"
+            :key="`movil-${transaccion.id}`"
+            class="md:hidden flex items-center justify-between px-4 py-3 animar-entrada"
+            style="border-bottom: 1px solid rgba(255,255,255,0.05)"
+          >
+            <div class="flex items-center gap-3">
+              <!-- Icono tipo -->
+              <div
+                class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                :style="transaccion.tipo === 'ingreso'
+                  ? 'background: rgba(74,222,128,0.15)'
+                  : 'background: rgba(248,113,113,0.15)'"
+              >
+                <i
+                  :class="transaccion.tipo === 'ingreso' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"
+                  :style="transaccion.tipo === 'ingreso' ? 'color: #4ade80' : 'color: #f87171'"
+                />
+              </div>
+              <!-- Info -->
+              <div>
+                <p class="texto-glass text-sm font-medium">
+                  {{ transaccion.descripcion || obtenerNombreCategoria(transaccion.id_categoria) }}
+                </p>
+                <p class="texto-glass-suave text-xs">
+                  {{ obtenerNombreCategoria(transaccion.id_categoria) }} · {{ formatearFecha(transaccion.fecha) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Importe y acciones -->
+            <div class="flex items-center gap-2">
+              <span
+                class="font-bold text-sm"
+                :class="transaccion.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
+              >
+                {{ transaccion.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(transaccion.importe) }}
+              </span>
+              <div class="flex gap-1">
+                <button
+                  @click="abrirDialogo(transaccion)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+                  style="background: rgba(255,255,255,0.08)"
+                >
+                  <i class="pi pi-pencil text-xs" />
+                </button>
+                <button
+                  @click="confirmarEliminar(transaccion)"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
+                  style="background: rgba(255,255,255,0.08)"
+                >
+                  <i class="pi pi-trash text-xs" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
 
       <!-- Diálogo crear/editar -->
@@ -144,7 +200,7 @@
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
         @click.self="dialogoVisible = false"
       >
-        <div class="glass w-full max-w-lg p-6 animar-dialogo">
+        <div class="glass w-full max-w-lg p-6 animar-dialogo overflow-y-auto max-h-screen">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold texto-glass">
               {{ transaccionEditando ? 'Editar transacción' : 'Nueva transacción' }}
