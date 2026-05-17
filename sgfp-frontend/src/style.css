@@ -51,50 +51,61 @@ body {
 }
 
 /* Personalización de toasts PrimeVue con Glassmorphism */
-.p-toast {
-  opacity: 1 !important;
-}
-
-.p-toast-message {
-  background: rgba(26, 26, 46, 0.95) !important;
+.p-toast .p-toast-message {
+  background: rgba(26, 26, 46, 0.97) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 1rem !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: white !important;
 }
 
-.p-toast-message-success {
+.p-toast .p-toast-message.p-toast-message-success {
   border-left: 4px solid #4ade80 !important;
 }
 
-.p-toast-message-error {
+.p-toast .p-toast-message.p-toast-message-error {
   border-left: 4px solid #f87171 !important;
 }
 
-.p-toast-message-warn {
+.p-toast .p-toast-message.p-toast-message-warn {
   border-left: 4px solid #fbbf24 !important;
 }
 
-.p-toast-message-info {
+.p-toast .p-toast-message.p-toast-message-info {
   border-left: 4px solid #a78bfa !important;
 }
 
-.p-toast-summary {
+.p-toast .p-toast-message-content {
+  padding: 1rem !important;
+  align-items: center !important;
+}
+
+.p-toast .p-toast-summary {
   color: rgba(255, 255, 255, 0.95) !important;
   font-weight: 600 !important;
+  font-size: 0.875rem !important;
 }
 
-.p-toast-detail {
+.p-toast .p-toast-detail {
   color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.8rem !important;
+  margin-top: 0.2rem !important;
 }
 
-.p-toast-icon-close {
+.p-toast .p-toast-icon-close {
   color: rgba(255, 255, 255, 0.4) !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  border-radius: 0.5rem !important;
 }
 
-.p-toast-icon-close:hover {
-  color: rgba(255, 255, 255, 0.9) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+.p-toast .p-toast-icon-close:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.p-toast .p-toast-message-icon {
+  font-size: 1.2rem !important;
 }
