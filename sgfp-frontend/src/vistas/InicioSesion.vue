@@ -19,7 +19,6 @@
           src="/logo.png"
           alt="SGFP Logo"
           class="w-60 h-80 rounded-2xl object-cover mx-auto mb-4"
-          style="box-shadow: 0 8px 32px rgba(124,58,237,0.3)"
         />
         <h1 class="text-3xl font-bold texto-glass">SGFP</h1>
         <p class="texto-glass-suave mt-1">Sistema de Gestión de Finanzas Personales</p>
