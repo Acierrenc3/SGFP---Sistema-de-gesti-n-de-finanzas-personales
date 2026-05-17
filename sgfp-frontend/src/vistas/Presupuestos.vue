@@ -94,15 +94,33 @@
             {{ formatearMoneda(presupuesto.importe_limite) }}
           </p>
 
-          <!-- Barra de progreso -->
-          <div class="w-full h-1.5 rounded-full" style="background: rgba(255,255,255,0.1)">
-            <div
-              class="h-1.5 rounded-full"
-              style="width: 0%; background: linear-gradient(90deg, #7c3aed, #00b4d8)"
-            />
-          </div>
-          <p class="texto-glass-suave text-xs mt-1">Límite mensual</p>
-        </div>
+      <!-- Barra de progreso real -->
+      <div class="w-full h-1.5 rounded-full mt-3" style="background: rgba(255,255,255,0.1)">
+        <div
+          class="h-1.5 rounded-full transition-all"
+          :style="{
+            width: `${Math.min(gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0, 100)}%`,
+            background: (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 100
+              ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+              : (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 80
+              ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+              : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
+          }"
+        />
+      </div>
+      <div class="flex justify-between mt-1">
+        <p class="texto-glass-suave text-xs">
+          {{ formatearMoneda(gastosReales[presupuesto.id_categoria]?.gasto_actual || 0) }} gastado
+        </p>
+        <p class="text-xs font-medium"
+          :style="(gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 100
+            ? 'color: #f87171'
+            : (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 80
+            ? 'color: #fbbf24'
+            : 'color: rgba(255,255,255,0.5)'"
+        >
+          {{ (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0).toFixed(1) }}%
+        </p>
       </div>
 
       <!-- Diálogo crear/editar -->
@@ -272,6 +290,7 @@ const dialogoEliminarVisible = ref(false)
 const presupuestoEditando = ref(null)
 const presupuestoEliminar = ref(null)
 const errores = ref({})
+const gastosReales = ref({})
 
 const meses = [
   { etiqueta: 'Enero', valor: 1 }, { etiqueta: 'Febrero', valor: 2 },
@@ -319,6 +338,7 @@ async function cargarPresupuestos() {
     if (filtros.value.anio) params.anio = filtros.value.anio
     const respuesta = await api.get('/presupuestos/', { params })
     presupuestos.value = respuesta.data
+    await cargarGastosReales()
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los presupuestos', life: 3000 })
   } finally {
@@ -398,6 +418,30 @@ async function eliminarPresupuesto() {
     await cargarPresupuestos()
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el presupuesto', life: 3000 })
+  }
+}
+
+async function cargarGastosReales() {
+  try {
+    const ahora = new Date()
+    const mes = filtros.value.mes || ahora.getMonth() + 1
+    const anio = filtros.value.anio || ahora.getFullYear()
+
+    const respuesta = await api.get('/dashboard/resumen', {
+      params: { mes, anio }
+    })
+
+    // Mapea los gastos por categoría
+    const mapaGastos = {}
+    respuesta.data.resumen_presupuestos.forEach(p => {
+      mapaGastos[p.id_categoria] = {
+        gasto_actual: p.gasto_actual,
+        porcentaje_usado: p.porcentaje_usado
+      }
+    })
+    gastosReales.value = mapaGastos
+  } catch {
+    // Si falla no bloqueamos la vista
   }
 }
 
