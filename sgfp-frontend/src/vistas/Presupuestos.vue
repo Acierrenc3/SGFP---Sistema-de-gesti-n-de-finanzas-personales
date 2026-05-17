@@ -1,3 +1,5 @@
+<!-- Vista de presupuestos con estilo Glassmorphism -->
+
 <template>
   <LayoutPrincipal>
     <div class="p-6">
@@ -266,3 +268,181 @@
     </div>
   </LayoutPrincipal>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
+import { useAutenticacionStore } from '../stores/autenticacion'
+import api from '../servicios/api'
+
+const toast = useToast()
+const autenticacion = useAutenticacionStore()
+
+const presupuestos = ref([])
+const categorias = ref([])
+const cargando = ref(false)
+const guardando = ref(false)
+const dialogoVisible = ref(false)
+const dialogoEliminarVisible = ref(false)
+const presupuestoEditando = ref(null)
+const presupuestoEliminar = ref(null)
+const errores = ref({})
+const gastosReales = ref({})
+
+const meses = [
+  { etiqueta: 'Enero', valor: 1 }, { etiqueta: 'Febrero', valor: 2 },
+  { etiqueta: 'Marzo', valor: 3 }, { etiqueta: 'Abril', valor: 4 },
+  { etiqueta: 'Mayo', valor: 5 }, { etiqueta: 'Junio', valor: 6 },
+  { etiqueta: 'Julio', valor: 7 }, { etiqueta: 'Agosto', valor: 8 },
+  { etiqueta: 'Septiembre', valor: 9 }, { etiqueta: 'Octubre', valor: 10 },
+  { etiqueta: 'Noviembre', valor: 11 }, { etiqueta: 'Diciembre', valor: 12 }
+]
+
+const anios = computed(() => {
+  const anioActual = new Date().getFullYear()
+  return Array.from({ length: 5 }, (_, i) => anioActual - i)
+})
+
+const formulario = ref({
+  id_categoria: '',
+  mes: new Date().getMonth() + 1,
+  anio: new Date().getFullYear(),
+  importe_limite: ''
+})
+
+const filtros = ref({ mes: '', anio: '' })
+
+function obtenerNombreCategoria(id) {
+  return categorias.value.find(c => c.id === id)?.nombre || '-'
+}
+
+function obtenerNombreMes(numero) {
+  return meses.find(m => m.valor === numero)?.etiqueta || '-'
+}
+
+function formatearMoneda(valor) {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: autenticacion.usuario?.moneda || 'EUR'
+  }).format(valor)
+}
+
+async function cargarGastosReales() {
+  try {
+    const ahora = new Date()
+    const mes = filtros.value.mes || ahora.getMonth() + 1
+    const anio = filtros.value.anio || ahora.getFullYear()
+
+    const respuesta = await api.get('/dashboard/resumen', {
+      params: { mes, anio }
+    })
+
+    const mapaGastos = {}
+    respuesta.data.resumen_presupuestos.forEach(p => {
+      mapaGastos[p.id_categoria] = {
+        gasto_actual: p.gasto_actual,
+        porcentaje_usado: p.porcentaje_usado
+      }
+    })
+    gastosReales.value = mapaGastos
+  } catch {
+    // Si falla no bloqueamos la vista
+  }
+}
+
+async function cargarPresupuestos() {
+  cargando.value = true
+  try {
+    const params = {}
+    if (filtros.value.mes) params.mes = filtros.value.mes
+    if (filtros.value.anio) params.anio = filtros.value.anio
+    const respuesta = await api.get('/presupuestos/', { params })
+    presupuestos.value = respuesta.data
+    await cargarGastosReales()
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los presupuestos', life: 3000 })
+  } finally {
+    cargando.value = false
+  }
+}
+
+async function cargarCategorias() {
+  const respuesta = await api.get('/categorias/', { params: { tipo: 'gasto' } })
+  categorias.value = respuesta.data
+}
+
+function abrirDialogo(presupuesto = null) {
+  errores.value = {}
+  presupuestoEditando.value = presupuesto
+  if (presupuesto) {
+    formulario.value = {
+      id_categoria: presupuesto.id_categoria,
+      mes: presupuesto.mes,
+      anio: presupuesto.anio,
+      importe_limite: presupuesto.importe_limite
+    }
+  } else {
+    formulario.value = {
+      id_categoria: '',
+      mes: new Date().getMonth() + 1,
+      anio: new Date().getFullYear(),
+      importe_limite: ''
+    }
+  }
+  dialogoVisible.value = true
+}
+
+function validar() {
+  errores.value = {}
+  if (!formulario.value.id_categoria) errores.value.id_categoria = 'La categoría es obligatoria'
+  if (!formulario.value.mes) errores.value.mes = 'El mes es obligatorio'
+  if (!formulario.value.anio) errores.value.anio = 'El año es obligatorio'
+  if (!formulario.value.importe_limite) errores.value.importe_limite = 'El importe límite es obligatorio'
+  return Object.keys(errores.value).length === 0
+}
+
+async function guardarPresupuesto() {
+  if (!validar()) return
+  guardando.value = true
+  try {
+    const datos = {
+      ...formulario.value,
+      importe_limite: parseFloat(formulario.value.importe_limite)
+    }
+    if (presupuestoEditando.value) {
+      await api.put(`/presupuestos/${presupuestoEditando.value.id}`, datos)
+      toast.add({ severity: 'success', summary: 'Actualizado', detail: 'Presupuesto actualizado correctamente', life: 3000 })
+    } else {
+      await api.post('/presupuestos/', datos)
+      toast.add({ severity: 'success', summary: 'Creado', detail: 'Presupuesto creado correctamente', life: 3000 })
+    }
+    dialogoVisible.value = false
+    await cargarPresupuestos()
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.detail || 'Error al guardar', life: 3000 })
+  } finally {
+    guardando.value = false
+  }
+}
+
+function confirmarEliminar(presupuesto) {
+  presupuestoEliminar.value = presupuesto
+  dialogoEliminarVisible.value = true
+}
+
+async function eliminarPresupuesto() {
+  try {
+    await api.delete(`/presupuestos/${presupuestoEliminar.value.id}`)
+    toast.add({ severity: 'success', summary: 'Eliminado', detail: 'Presupuesto eliminado correctamente', life: 3000 })
+    dialogoEliminarVisible.value = false
+    await cargarPresupuestos()
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el presupuesto', life: 3000 })
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([cargarPresupuestos(), cargarCategorias()])
+})
+</script>
