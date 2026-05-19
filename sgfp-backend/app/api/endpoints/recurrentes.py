@@ -25,6 +25,10 @@ def calcular_proxima_ejecucion(frecuencia: str, fecha_inicio: datetime, dia_repe
     """Calcula la próxima fecha de ejecución según la frecuencia."""
     ahora = datetime.utcnow()
 
+    # Elimina timezone info para comparar correctamente
+    if fecha_inicio.tzinfo is not None:
+        fecha_inicio = fecha_inicio.replace(tzinfo=None)
+
     if frecuencia == "diario":
         proxima = fecha_inicio
         while proxima <= ahora:
