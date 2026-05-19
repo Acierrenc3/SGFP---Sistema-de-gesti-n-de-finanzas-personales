@@ -23,11 +23,10 @@
         <span class="font-bold texto-glass text-lg">SGFP</span>
       </div>
 
-      <!-- Links desktop -->
       <div class="hidden md:flex items-center gap-8">
-        <a href="#features" class="texto-glass-suave text-sm hover:text-white transition-colors">Características</a>
-        <a href="#como-funciona" class="texto-glass-suave text-sm hover:text-white transition-colors">Cómo funciona</a>
-        <a href="#precios" class="texto-glass-suave text-sm hover:text-white transition-colors">Precios</a>
+        <button @click="scrollTo('#features')" class="texto-glass-suave text-sm hover:text-white transition-colors">Características</button>
+        <button @click="scrollTo('#como-funciona')" class="texto-glass-suave text-sm hover:text-white transition-colors">Cómo funciona</button>
+        <button @click="scrollTo('#precios')" class="texto-glass-suave text-sm hover:text-white transition-colors">Precios</button>
       </div>
 
       <div class="flex items-center gap-3">
@@ -60,9 +59,7 @@
 
         <h1 class="text-4xl md:text-6xl font-bold texto-glass mb-6 leading-tight">
           Toma el control de<br />
-          <span style="background: linear-gradient(135deg, #7c3aed, #00b4d8); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
-            tus finanzas
-          </span>
+          <span class="texto-gradiente">tus finanzas</span>
         </h1>
 
         <p class="texto-glass-suave text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -79,23 +76,19 @@
             Empezar gratis
             <i class="pi pi-arrow-right ml-2" />
           </RouterLink>
-          
-            href="#features"
+          <button
+            @click="scrollTo('#features')"
             class="px-8 py-4 rounded-2xl text-sm font-medium transition-all hover:text-white texto-glass-suave"
             style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
           >
             Ver características
-          </a>
+          </button>
         </div>
       </div>
 
       <!-- Preview app -->
       <div class="mt-16 w-full max-w-4xl animar-entrada">
-        <div
-          class="glass p-6 rounded-2xl"
-          style="box-shadow: 0 32px 64px rgba(0,0,0,0.4)"
-        >
-          <!-- Mockup dashboard -->
+        <div class="glass p-6 rounded-2xl" style="box-shadow: 0 32px 64px rgba(0,0,0,0.4)">
           <div class="grid grid-cols-3 gap-3 mb-4">
             <div class="glass p-4 rounded-xl">
               <p class="texto-glass-suave text-xs mb-1">Ingresos</p>
@@ -110,7 +103,6 @@
               <p class="text-purple-400 font-bold text-lg">1.220,00 €</p>
             </div>
           </div>
-          <!-- Barra de presupuesto simulada -->
           <div class="glass p-4 rounded-xl">
             <div class="flex justify-between mb-2">
               <span class="texto-glass text-xs font-medium">Alimentación</span>
@@ -143,9 +135,7 @@
         <div class="text-center mb-16">
           <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
             Todo lo que necesitas para
-            <span style="background: linear-gradient(135deg, #7c3aed, #00b4d8); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
-              gestionar tu dinero
-            </span>
+            <span class="texto-gradiente">gestionar tu dinero</span>
           </h2>
           <p class="texto-glass-suave text-lg max-w-2xl mx-auto">
             SGFP combina simplicidad y potencia para darte el control total de tus finanzas personales.
@@ -177,9 +167,7 @@
         <div class="text-center mb-16">
           <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
             Empieza en
-            <span style="background: linear-gradient(135deg, #7c3aed, #00b4d8); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
-              3 simples pasos
-            </span>
+            <span class="texto-gradiente">3 simples pasos</span>
           </h2>
           <p class="texto-glass-suave text-lg">Sin complicaciones, sin tarjeta de crédito.</p>
         </div>
@@ -190,7 +178,6 @@
             :key="paso.titulo"
             class="glass p-6 text-center relative"
           >
-            <!-- Número -->
             <div
               class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4"
               style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
@@ -199,8 +186,6 @@
             </div>
             <h3 class="texto-glass font-semibold text-lg mb-2">{{ paso.titulo }}</h3>
             <p class="texto-glass-suave text-sm leading-relaxed">{{ paso.descripcion }}</p>
-
-            <!-- Flecha entre pasos -->
             <div
               v-if="index < pasos.length - 1"
               class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 z-10"
@@ -218,9 +203,7 @@
         <div class="text-center mb-16">
           <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
             Planes
-            <span style="background: linear-gradient(135deg, #7c3aed, #00b4d8); -webkit-background-clip: text; -webkit-text-fill-color: transparent">
-              simples y transparentes
-            </span>
+            <span class="texto-gradiente">simples y transparentes</span>
           </h2>
           <p class="texto-glass-suave text-lg">Empieza gratis, escala cuando lo necesites.</p>
         </div>
@@ -251,7 +234,6 @@
 
           <!-- Plan Pro -->
           <div class="glass p-8 relative overflow-hidden">
-            <!-- Badge -->
             <div
               class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-white"
               style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
@@ -402,4 +384,8 @@ const planPro = [
   'Soporte prioritario',
   'Multi-divisa avanzado'
 ]
+
+function scrollTo(selector) {
+  document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth' })
+}
 </script>
