@@ -412,7 +412,5 @@ const planPro = [
   'Multi-divisa avanzado'
 ]
 
-function scrollTo(selector) {
-  document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth' })
-}
+
 </script>
