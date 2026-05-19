@@ -123,6 +123,16 @@
               {{ (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0).toFixed(1) }}%
             </p>
           </div>
+
+          <!-- Botón desglose -->
+          <button
+            @click="abrirDesglose(presupuesto)"
+            class="w-full mt-3 py-2 rounded-xl text-xs font-medium transition-all texto-glass-suave hover:text-white flex items-center justify-center gap-2"
+            style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)"
+          >
+            <i class="pi pi-list" />
+            Ver desglose
+          </button>
         </div>
       </div>
 
@@ -265,6 +275,129 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal desglose de presupuesto -->
+      <div
+        v-if="desgloseVisible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+        @click.self="desgloseVisible = false"
+      >
+        <div class="glass w-full max-w-2xl p-6 animar-dialogo max-h-screen overflow-y-auto">
+          <!-- Cabecera -->
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-lg font-bold texto-glass">
+                {{ presupuestoDesglose?.nombre_categoria }}
+              </h3>
+              <p class="texto-glass-suave text-xs mt-0.5">
+                {{ obtenerNombreMes(presupuestoDesglose?.mes) }} {{ presupuestoDesglose?.anio }}
+              </p>
+            </div>
+            <button
+              @click="desgloseVisible = false"
+              class="w-8 h-8 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+              style="background: rgba(255,255,255,0.08)"
+            >
+              <i class="pi pi-times text-sm" />
+            </button>
+          </div>
+
+          <!-- Resumen -->
+          <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="glass p-4 text-center">
+              <p class="texto-glass-suave text-xs mb-1">Límite</p>
+              <p class="texto-glass font-bold">{{ formatearMoneda(presupuestoDesglose?.importe_limite) }}</p>
+            </div>
+            <div class="glass p-4 text-center">
+              <p class="texto-glass-suave text-xs mb-1">Gastado</p>
+              <p class="text-red-400 font-bold">{{ formatearMoneda(totalDesglose) }}</p>
+            </div>
+            <div class="glass p-4 text-center">
+              <p class="texto-glass-suave text-xs mb-1">Disponible</p>
+              <p
+                class="font-bold"
+                :class="(presupuestoDesglose?.importe_limite - totalDesglose) >= 0 ? 'text-green-400' : 'text-red-400'"
+              >
+                {{ formatearMoneda((presupuestoDesglose?.importe_limite || 0) - totalDesglose) }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="mb-6">
+            <div class="flex justify-between mb-2">
+              <span class="texto-glass-suave text-xs">Progreso</span>
+              <span
+                class="text-xs font-medium"
+                :style="porcentajeDesglose >= 100
+                  ? 'color: #f87171'
+                  : porcentajeDesglose >= 80
+                  ? 'color: #fbbf24'
+                  : 'color: rgba(255,255,255,0.5)'"
+              >
+                {{ porcentajeDesglose.toFixed(1) }}%
+              </span>
+            </div>
+            <div class="w-full h-2 rounded-full" style="background: rgba(255,255,255,0.1)">
+              <div
+                class="h-2 rounded-full animar-progreso"
+                :style="{
+                  width: `${Math.min(porcentajeDesglose, 100)}%`,
+                  background: porcentajeDesglose >= 100
+                    ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                    : porcentajeDesglose >= 80
+                    ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                    : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
+                }"
+              />
+            </div>
+          </div>
+
+          <!-- Tabla de transacciones -->
+          <div v-if="cargandoDesglose" class="flex justify-center py-8">
+            <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
+          </div>
+
+          <div v-else-if="transaccionesDesglose.length === 0" class="flex flex-col items-center py-8 texto-glass-suave">
+            <i class="pi pi-inbox text-3xl mb-2 opacity-30" />
+            <p class="text-sm">No hay transacciones en este período</p>
+          </div>
+
+          <div v-else>
+            <!-- Cabecera tabla -->
+            <div class="grid grid-cols-3 px-4 py-2 text-xs font-medium texto-glass-suave uppercase tracking-wider mb-1"
+              style="border-bottom: 1px solid rgba(255,255,255,0.08)">
+              <span>Fecha</span>
+              <span>Descripción</span>
+              <span class="text-right">Importe</span>
+            </div>
+
+            <!-- Filas -->
+            <div
+              v-for="transaccion in transaccionesDesglose"
+              :key="transaccion.id"
+              class="grid grid-cols-3 px-4 py-3 items-center transition-all hover:bg-white/5"
+              style="border-bottom: 1px solid rgba(255,255,255,0.05)"
+            >
+              <span class="texto-glass text-sm">{{ formatearFecha(transaccion.fecha) }}</span>
+              <span class="texto-glass-suave text-sm truncate">{{ transaccion.descripcion || '-' }}</span>
+              <span class="text-red-400 font-bold text-sm text-right">
+                -{{ formatearMoneda(transaccion.importe) }}
+              </span>
+            </div>
+
+            <!-- Total -->
+            <div class="grid grid-cols-3 px-4 py-3 items-center mt-1"
+              style="border-top: 1px solid rgba(255,255,255,0.12)">
+              <span class="texto-glass font-semibold text-sm col-span-2">Total gastado</span>
+              <span class="text-red-400 font-bold text-sm text-right">
+                -{{ formatearMoneda(totalDesglose) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </LayoutPrincipal>
 </template>
@@ -289,6 +422,21 @@ const presupuestoEditando = ref(null)
 const presupuestoEliminar = ref(null)
 const errores = ref({})
 const gastosReales = ref({})
+
+// Desglose
+const desgloseVisible = ref(false)
+const presupuestoDesglose = ref(null)
+const transaccionesDesglose = ref([])
+const cargandoDesglose = ref(false)
+
+const totalDesglose = computed(() => {
+  return transaccionesDesglose.value.reduce((total, t) => total + t.importe, 0)
+})
+
+const porcentajeDesglose = computed(() => {
+  if (!presupuestoDesglose.value?.importe_limite) return 0
+  return (totalDesglose.value / presupuestoDesglose.value.importe_limite) * 100
+})
 
 const meses = [
   { etiqueta: 'Enero', valor: 1 }, { etiqueta: 'Febrero', valor: 2 },
@@ -325,7 +473,11 @@ function formatearMoneda(valor) {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: autenticacion.usuario?.moneda || 'EUR'
-  }).format(valor)
+  }).format(valor || 0)
+}
+
+function formatearFecha(fecha) {
+  return new Date(fecha).toLocaleDateString('es-ES')
 }
 
 async function cargarGastosReales() {
@@ -370,6 +522,32 @@ async function cargarPresupuestos() {
 async function cargarCategorias() {
   const respuesta = await api.get('/categorias/', { params: { tipo: 'gasto' } })
   categorias.value = respuesta.data
+}
+
+async function abrirDesglose(presupuesto) {
+  presupuestoDesglose.value = {
+    ...presupuesto,
+    nombre_categoria: obtenerNombreCategoria(presupuesto.id_categoria)
+  }
+  desgloseVisible.value = true
+  cargandoDesglose.value = true
+  transaccionesDesglose.value = []
+
+  try {
+    const respuesta = await api.get('/transacciones/', {
+      params: {
+        id_categoria: presupuesto.id_categoria,
+        tipo: 'gasto',
+        fecha_inicio: new Date(presupuesto.anio, presupuesto.mes - 1, 1).toISOString(),
+        fecha_fin: new Date(presupuesto.anio, presupuesto.mes, 0, 23, 59, 59).toISOString()
+      }
+    })
+    transaccionesDesglose.value = respuesta.data
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el desglose', life: 3000 })
+  } finally {
+    cargandoDesglose.value = false
+  }
 }
 
 function abrirDialogo(presupuesto = null) {
