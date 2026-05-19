@@ -312,10 +312,11 @@
 
 <script setup>
 import { RouterLink } from 'vue-router'
-import { onMounted } from 'vue'
+import { onMounted, nextTick } from 'vue'
 
-onMounted(() => {
-  // Intersection Observer para animaciones al hacer scroll
+onMounted(async () => {
+  await nextTick()
+
   const observador = new IntersectionObserver(
     (entradas) => {
       entradas.forEach((entrada) => {
@@ -325,15 +326,18 @@ onMounted(() => {
       })
     },
     {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
+      threshold: 0.15,
+      rootMargin: '0px 0px -80px 0px'
     }
   )
 
-  // Observa todos los elementos con clases de animación
-  document.querySelectorAll('.scroll-oculto, .scroll-oculto-izquierda, .scroll-oculto-derecha, .scroll-oculto-escala').forEach((el) => {
-    observador.observe(el)
-  })
+  setTimeout(() => {
+    document.querySelectorAll(
+      '.scroll-oculto, .scroll-oculto-izquierda, .scroll-oculto-derecha, .scroll-oculto-escala'
+    ).forEach((el) => {
+      observador.observe(el)
+    })
+  }, 100)
 })
 
 function scrollTo(selector) {
@@ -411,6 +415,4 @@ const planPro = [
   'Soporte prioritario',
   'Multi-divisa avanzado'
 ]
-
-
 </script>
