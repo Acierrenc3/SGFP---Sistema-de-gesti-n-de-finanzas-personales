@@ -37,7 +37,6 @@
 
       <!-- Tarjetas de resumen -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <!-- Ingresos -->
         <div class="glass p-6 animar-entrada">
           <div class="flex items-center justify-between">
             <div>
@@ -53,7 +52,6 @@
           </div>
         </div>
 
-        <!-- Gastos -->
         <div class="glass p-6 animar-entrada">
           <div class="flex items-center justify-between">
             <div>
@@ -69,7 +67,6 @@
           </div>
         </div>
 
-        <!-- Balance -->
         <div class="glass p-6 animar-entrada">
           <div class="flex items-center justify-between">
             <div>
@@ -91,7 +88,6 @@
 
       <!-- Gráficos -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <!-- Gastos por categoría -->
         <div class="glass p-6 animar-entrada">
           <h3 class="texto-glass font-semibold mb-4">Gastos por categoría</h3>
           <Chart
@@ -107,7 +103,6 @@
           </div>
         </div>
 
-        <!-- Evolución mensual -->
         <div class="glass p-6 animar-entrada">
           <h3 class="texto-glass font-semibold mb-4">Evolución mensual</h3>
           <Chart
@@ -125,7 +120,7 @@
       </div>
 
       <!-- Presupuestos -->
-      <div class="glass p-6 animar-entrada" v-if="resumen?.resumen_presupuestos?.length">
+      <div class="glass p-6 animar-entrada mb-6" v-if="resumen?.resumen_presupuestos?.length">
         <h3 class="texto-glass font-semibold mb-4">Estado de presupuestos</h3>
         <div class="flex flex-col gap-4">
           <div
@@ -156,6 +151,61 @@
           </div>
         </div>
       </div>
+
+      <!-- Transacciones recientes -->
+      <div class="glass p-6 animar-entrada">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="texto-glass font-semibold">Transacciones recientes</h3>
+          <RouterLink
+            to="/transacciones"
+            class="text-xs texto-glass-suave hover:text-purple-400 transition-colors flex items-center gap-1"
+          >
+            Ver todas
+            <i class="pi pi-arrow-right text-xs" />
+          </RouterLink>
+        </div>
+
+        <div v-if="transaccionesRecientes.length === 0" class="flex flex-col items-center py-8 texto-glass-suave">
+          <i class="pi pi-inbox text-3xl mb-2 opacity-30" />
+          <p class="text-sm">Sin transacciones recientes</p>
+        </div>
+
+        <div
+          v-else
+          v-for="transaccion in transaccionesRecientes"
+          :key="transaccion.id"
+          class="flex items-center justify-between py-3"
+          style="border-bottom: 1px solid rgba(255,255,255,0.05)"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              :style="transaccion.tipo === 'ingreso'
+                ? 'background: rgba(74,222,128,0.15)'
+                : 'background: rgba(248,113,113,0.15)'"
+            >
+              <i
+                :class="transaccion.tipo === 'ingreso' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"
+                :style="transaccion.tipo === 'ingreso' ? 'color: #4ade80' : 'color: #f87171'"
+              />
+            </div>
+            <div>
+              <p class="texto-glass text-sm font-medium">
+                {{ transaccion.descripcion || obtenerNombreCategoria(transaccion.id_categoria) }}
+              </p>
+              <p class="texto-glass-suave text-xs">
+                {{ obtenerNombreCategoria(transaccion.id_categoria) }} · {{ formatearFecha(transaccion.fecha) }}
+              </p>
+            </div>
+          </div>
+          <span
+            class="font-bold text-sm"
+            :class="transaccion.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
+          >
+            {{ transaccion.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(transaccion.importe) }}
+          </span>
+        </div>
+      </div>
     </div>
   </LayoutPrincipal>
 </template>
@@ -163,6 +213,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { RouterLink } from 'vue-router'
 import Chart from 'primevue/chart'
 import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
 import { useAutenticacionStore } from '../stores/autenticacion'
@@ -173,6 +224,8 @@ const autenticacion = useAutenticacionStore()
 
 const resumen = ref(null)
 const cargando = ref(false)
+const transaccionesRecientes = ref([])
+const categorias = ref([])
 
 const ahora = new Date()
 const mesSeleccionado = ref(ahora.getMonth() + 1)
@@ -259,6 +312,14 @@ function formatearMoneda(valor) {
   }).format(valor)
 }
 
+function formatearFecha(fecha) {
+  return new Date(fecha).toLocaleDateString('es-ES')
+}
+
+function obtenerNombreCategoria(id) {
+  return categorias.value.find(c => c.id === id)?.nombre || '-'
+}
+
 async function cargarDatos() {
   cargando.value = true
   try {
@@ -273,9 +334,26 @@ async function cargarDatos() {
   }
 }
 
+async function cargarTransaccionesRecientes() {
+  try {
+    const respuesta = await api.get('/transacciones/')
+    transaccionesRecientes.value = respuesta.data.slice(0, 5)
+  } catch {
+    // Si falla no bloqueamos el dashboard
+  }
+}
+
+async function cargarCategorias() {
+  try {
+    const respuesta = await api.get('/categorias/')
+    categorias.value = respuesta.data
+  } catch {
+    // Si falla no bloqueamos el dashboard
+  }
+}
+
 async function verificarRecurrentes() {
   try {
-    // Al listar recurrentes el backend ejecuta automáticamente los pendientes
     await api.get('/recurrentes/')
   } catch {
     // Si falla no bloqueamos el dashboard
