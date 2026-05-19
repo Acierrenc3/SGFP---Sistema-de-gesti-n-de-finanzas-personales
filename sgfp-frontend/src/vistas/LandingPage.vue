@@ -129,164 +129,164 @@
       </div>
     </section>
 
-    <!-- SECCIÓN 2: FEATURES -->
-    <section id="features" class="relative z-10 py-24 px-6">
-      <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
-            Todo lo que necesitas para
-            <span class="texto-gradiente">gestionar tu dinero</span>
-          </h2>
-          <p class="texto-glass-suave text-lg max-w-2xl mx-auto">
-            SGFP combina simplicidad y potencia para darte el control total de tus finanzas personales.
-          </p>
-        </div>
+<!-- SECCIÓN 2: FEATURES -->
+<section id="features" class="relative z-10 py-24 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16 scroll-oculto">
+      <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
+        Todo lo que necesitas para
+        <span class="texto-gradiente">gestionar tu dinero</span>
+      </h2>
+      <p class="texto-glass-suave text-lg max-w-2xl mx-auto">
+        SGFP combina simplicidad y potencia para darte el control total de tus finanzas personales.
+      </p>
+    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="feature in features"
-            :key="feature.titulo"
-            class="glass p-6 hover:scale-105 transition-transform duration-300"
-          >
-            <div
-              class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-              :style="`background: ${feature.color}20; border: 1px solid ${feature.color}40`"
-            >
-              <i :class="feature.icono" :style="`color: ${feature.color}; font-size: 1.3rem`" />
-            </div>
-            <h3 class="texto-glass font-semibold text-lg mb-2">{{ feature.titulo }}</h3>
-            <p class="texto-glass-suave text-sm leading-relaxed">{{ feature.descripcion }}</p>
-          </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        v-for="(feature, index) in features"
+        :key="feature.titulo"
+        class="glass p-6 hover:scale-105 transition-transform duration-300 scroll-oculto"
+        :class="`delay-${index + 1}`"
+      >
+        <div
+          class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+          :style="`background: ${feature.color}20; border: 1px solid ${feature.color}40`"
+        >
+          <i :class="feature.icono" :style="`color: ${feature.color}; font-size: 1.3rem`" />
+        </div>
+        <h3 class="texto-glass font-semibold text-lg mb-2">{{ feature.titulo }}</h3>
+        <p class="texto-glass-suave text-sm leading-relaxed">{{ feature.descripcion }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 3: CÓMO FUNCIONA -->
+<section id="como-funciona" class="relative z-10 py-24 px-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-16 scroll-oculto">
+      <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
+        Empieza en
+        <span class="texto-gradiente">3 simples pasos</span>
+      </h2>
+      <p class="texto-glass-suave text-lg">Sin complicaciones, sin tarjeta de crédito.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div
+        v-for="(paso, index) in pasos"
+        :key="paso.titulo"
+        class="glass p-6 text-center relative scroll-oculto-escala"
+        :class="`delay-${index + 1}`"
+      >
+        <div
+          class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4"
+          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+        >
+          {{ index + 1 }}
+        </div>
+        <h3 class="texto-glass font-semibold text-lg mb-2">{{ paso.titulo }}</h3>
+        <p class="texto-glass-suave text-sm leading-relaxed">{{ paso.descripcion }}</p>
+        <div
+          v-if="index < pasos.length - 1"
+          class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 z-10"
+        >
+          <i class="pi pi-arrow-right texto-glass-suave text-xl" />
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- SECCIÓN 3: CÓMO FUNCIONA -->
-    <section id="como-funciona" class="relative z-10 py-24 px-6">
-      <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
-            Empieza en
-            <span class="texto-gradiente">3 simples pasos</span>
-          </h2>
-          <p class="texto-glass-suave text-lg">Sin complicaciones, sin tarjeta de crédito.</p>
-        </div>
+<!-- SECCIÓN 4: PRECIOS -->
+<section id="precios" class="relative z-10 py-24 px-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-16 scroll-oculto">
+      <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
+        Planes
+        <span class="texto-gradiente">simples y transparentes</span>
+      </h2>
+      <p class="texto-glass-suave text-lg">Empieza gratis, escala cuando lo necesites.</p>
+    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div
-            v-for="(paso, index) in pasos"
-            :key="paso.titulo"
-            class="glass p-6 text-center relative"
-          >
-            <div
-              class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white mx-auto mb-4"
-              style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
-            >
-              {{ index + 1 }}
-            </div>
-            <h3 class="texto-glass font-semibold text-lg mb-2">{{ paso.titulo }}</h3>
-            <p class="texto-glass-suave text-sm leading-relaxed">{{ paso.descripcion }}</p>
-            <div
-              v-if="index < pasos.length - 1"
-              class="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 z-10"
-            >
-              <i class="pi pi-arrow-right texto-glass-suave text-xl" />
-            </div>
-          </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+      <div class="glass p-8 scroll-oculto-izquierda delay-1">
+        <h3 class="texto-glass font-bold text-xl mb-2">Gratuito</h3>
+        <p class="texto-glass-suave text-sm mb-6">Para empezar a controlar tus finanzas</p>
+        <div class="flex items-end gap-1 mb-6">
+          <span class="text-4xl font-bold texto-glass">0€</span>
+          <span class="texto-glass-suave text-sm mb-1">/mes</span>
         </div>
+        <ul class="flex flex-col gap-3 mb-8">
+          <li v-for="item in planGratuito" :key="item" class="flex items-center gap-2">
+            <i class="pi pi-check text-green-400 text-sm" />
+            <span class="texto-glass-suave text-sm">{{ item }}</span>
+          </li>
+        </ul>
+        <RouterLink
+          to="/registro"
+          class="block text-center py-3 rounded-xl text-white font-medium transition-all hover:opacity-90"
+          style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2)"
+        >
+          Empezar gratis
+        </RouterLink>
       </div>
-    </section>
 
-    <!-- SECCIÓN 4: PRECIOS -->
-    <section id="precios" class="relative z-10 py-24 px-6">
-      <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
-            Planes
-            <span class="texto-gradiente">simples y transparentes</span>
-          </h2>
-          <p class="texto-glass-suave text-lg">Empieza gratis, escala cuando lo necesites.</p>
+      <div class="glass p-8 relative overflow-hidden scroll-oculto-derecha delay-2">
+        <div
+          class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-white"
+          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+        >
+          Próximamente
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          <!-- Plan gratuito -->
-          <div class="glass p-8">
-            <h3 class="texto-glass font-bold text-xl mb-2">Gratuito</h3>
-            <p class="texto-glass-suave text-sm mb-6">Para empezar a controlar tus finanzas</p>
-            <div class="flex items-end gap-1 mb-6">
-              <span class="text-4xl font-bold texto-glass">0€</span>
-              <span class="texto-glass-suave text-sm mb-1">/mes</span>
-            </div>
-            <ul class="flex flex-col gap-3 mb-8">
-              <li v-for="item in planGratuito" :key="item" class="flex items-center gap-2">
-                <i class="pi pi-check text-green-400 text-sm" />
-                <span class="texto-glass-suave text-sm">{{ item }}</span>
-              </li>
-            </ul>
-            <RouterLink
-              to="/registro"
-              class="block text-center py-3 rounded-xl text-white font-medium transition-all hover:opacity-90"
-              style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2)"
-            >
-              Empezar gratis
-            </RouterLink>
-          </div>
-
-          <!-- Plan Pro -->
-          <div class="glass p-8 relative overflow-hidden">
-            <div
-              class="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-white"
-              style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
-            >
-              Próximamente
-            </div>
-            <h3 class="texto-glass font-bold text-xl mb-2">Pro</h3>
-            <p class="texto-glass-suave text-sm mb-6">Para usuarios avanzados</p>
-            <div class="flex items-end gap-1 mb-6">
-              <span class="text-4xl font-bold texto-glass">4,99€</span>
-              <span class="texto-glass-suave text-sm mb-1">/mes</span>
-            </div>
-            <ul class="flex flex-col gap-3 mb-8">
-              <li v-for="item in planPro" :key="item" class="flex items-center gap-2">
-                <i class="pi pi-check text-purple-400 text-sm" />
-                <span class="texto-glass-suave text-sm">{{ item }}</span>
-              </li>
-            </ul>
-            <button
-              disabled
-              class="w-full py-3 rounded-xl text-white font-medium opacity-50 cursor-not-allowed"
-              style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
-            >
-              Próximamente
-            </button>
-          </div>
+        <h3 class="texto-glass font-bold text-xl mb-2">Pro</h3>
+        <p class="texto-glass-suave text-sm mb-6">Para usuarios avanzados</p>
+        <div class="flex items-end gap-1 mb-6">
+          <span class="text-4xl font-bold texto-glass">4,99€</span>
+          <span class="texto-glass-suave text-sm mb-1">/mes</span>
         </div>
+        <ul class="flex flex-col gap-3 mb-8">
+          <li v-for="item in planPro" :key="item" class="flex items-center gap-2">
+            <i class="pi pi-check text-purple-400 text-sm" />
+            <span class="texto-glass-suave text-sm">{{ item }}</span>
+          </li>
+        </ul>
+        <button
+          disabled
+          class="w-full py-3 rounded-xl text-white font-medium opacity-50 cursor-not-allowed"
+          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+        >
+          Próximamente
+        </button>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- SECCIÓN 5: CTA FINAL -->
-    <section class="relative z-10 py-24 px-6">
-      <div class="max-w-2xl mx-auto text-center">
-        <div class="glass p-12 rounded-3xl">
-          <img src="/logo.png" alt="SGFP" class="w-16 h-16 rounded-2xl object-cover mx-auto mb-6" />
-          <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
-            Empieza hoy mismo
-          </h2>
-          <p class="texto-glass-suave text-lg mb-8">
-            Únete y toma el control de tus finanzas personales de forma sencilla y visual.
-          </p>
-          <RouterLink
-            to="/registro"
-            class="inline-flex items-center gap-2 px-10 py-4 rounded-2xl text-white font-semibold text-lg transition-all hover:opacity-90 active:scale-95"
-            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
-          >
-            Crear cuenta gratis
-            <i class="pi pi-arrow-right" />
-          </RouterLink>
-          <p class="texto-glass-suave text-sm mt-4">Sin tarjeta de crédito · Gratis para siempre</p>
-        </div>
-      </div>
-    </section>
+<!-- SECCIÓN 5: CTA FINAL -->
+<section class="relative z-10 py-24 px-6">
+  <div class="max-w-2xl mx-auto text-center">
+    <div class="glass p-12 rounded-3xl scroll-oculto-escala">
+      <img src="/logo.png" alt="SGFP" class="w-16 h-16 rounded-2xl object-cover mx-auto mb-6" />
+      <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
+        Empieza hoy mismo
+      </h2>
+      <p class="texto-glass-suave text-lg mb-8">
+        Únete y toma el control de tus finanzas personales de forma sencilla y visual.
+      </p>
+      <RouterLink
+        to="/registro"
+        class="inline-flex items-center gap-2 px-10 py-4 rounded-2xl text-white font-semibold text-lg transition-all hover:opacity-90 active:scale-95"
+        style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+      >
+        Crear cuenta gratis
+        <i class="pi pi-arrow-right" />
+      </RouterLink>
+      <p class="texto-glass-suave text-sm mt-4">Sin tarjeta de crédito · Gratis para siempre</p>
+    </div>
+  </div>
+</section>
 
     <!-- FOOTER -->
     <footer class="relative z-10 py-8 px-6" style="border-top: 1px solid rgba(255,255,255,0.08)">
@@ -312,6 +312,33 @@
 
 <script setup>
 import { RouterLink } from 'vue-router'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  // Intersection Observer para animaciones al hacer scroll
+  const observador = new IntersectionObserver(
+    (entradas) => {
+      entradas.forEach((entrada) => {
+        if (entrada.isIntersecting) {
+          entrada.target.classList.add('scroll-visible')
+        }
+      })
+    },
+    {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    }
+  )
+
+  // Observa todos los elementos con clases de animación
+  document.querySelectorAll('.scroll-oculto, .scroll-oculto-izquierda, .scroll-oculto-derecha, .scroll-oculto-escala').forEach((el) => {
+    observador.observe(el)
+  })
+})
+
+function scrollTo(selector) {
+  document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth' })
+}
 
 const features = [
   {
