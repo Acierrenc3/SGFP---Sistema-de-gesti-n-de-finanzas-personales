@@ -11,6 +11,7 @@ from app.api.endpoints import (
     dashboard,
     exportar,
     presupuestos,
+    recurrentes,
     transacciones,
     usuarios
 )
@@ -86,6 +87,11 @@ app.include_router(
     usuarios.enrutador,
     prefix="/usuarios",
     tags=["Usuarios"]
+)
+app.include_router(
+    recurrentes.enrutador,
+    prefix="/recurrentes",
+    tags=["Recurrentes"]
 )
 
 

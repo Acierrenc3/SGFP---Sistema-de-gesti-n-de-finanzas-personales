@@ -177,6 +177,7 @@ const notificacionesStore = useNotificacionesStore()
 const menuItems = [
   { etiqueta: 'Dashboard', etiquetaCorta: 'Inicio', ruta: '/dashboard', icono: 'pi pi-home' },
   { etiqueta: 'Transacciones', etiquetaCorta: 'Movimientos', ruta: '/transacciones', icono: 'pi pi-arrow-right-arrow-left' },
+  { etiqueta: 'Recurrentes', etiquetaCorta: 'Recurrentes', ruta: '/recurrentes', icono: 'pi pi-sync' },
   { etiqueta: 'Categorías', etiquetaCorta: 'Categorías', ruta: '/categorias', icono: 'pi pi-tag' },
   { etiqueta: 'Presupuestos', etiquetaCorta: 'Presupuesto', ruta: '/presupuestos', icono: 'pi pi-wallet' },
   { etiqueta: 'Cuentas', etiquetaCorta: 'Cuentas', ruta: '/cuentas', icono: 'pi pi-credit-card' },

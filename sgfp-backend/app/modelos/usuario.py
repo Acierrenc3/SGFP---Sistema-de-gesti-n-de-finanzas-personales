@@ -38,3 +38,9 @@ class Usuario(Base):
         back_populates="usuario",
         cascade="all, delete-orphan"
     )
+
+    recurrentes = relationship(
+    "Recurrente",
+    back_populates="usuario",
+    cascade="all, delete-orphan"
+)

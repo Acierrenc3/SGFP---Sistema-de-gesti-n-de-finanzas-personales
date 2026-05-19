@@ -13,6 +13,8 @@ const Categorias = () => import('../vistas/Categorias.vue')
 const Presupuestos = () => import('../vistas/Presupuestos.vue')
 const Cuentas = () => import('../vistas/Cuentas.vue')
 const Perfil = () => import('../vistas/Perfil.vue')
+const Recurrentes = () => import('../vistas/Recurrentes.vue')
+
 
 // Definición de rutas
 const rutas = [
@@ -69,6 +71,12 @@ const rutas = [
         name: 'Perfil',
         component: Perfil,
         meta: { requiereAuth: true }
+    },  
+    {
+    path: '/recurrentes',
+    name: 'Recurrentes',
+    component: Recurrentes,
+    meta: { requiereAuth: true }
     }
 ]
 
