@@ -83,44 +83,12 @@
           <span class="font-bold texto-glass">SGFP</span>
         </div>
         <div class="flex items-center gap-3">
-          <!-- Notificaciones móvil -->
           <PanelNotificaciones />
           <div class="flex items-center gap-2">
             <span class="texto-glass-suave text-sm hidden sm:block">{{ autenticacion.usuario?.nombre }}</span>
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
               style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
               {{ inicialUsuario }}
-            </div>
-          </div>
-        </div>
-        <!-- Diálogo confirmar cerrar sesión -->
-        <div
-          v-if="dialogoCerrarSesion"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
-        >
-          <div class="glass w-full max-w-sm p-6 text-center">
-            <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-              style="background: rgba(239,68,68,0.15)">
-              <i class="pi pi-sign-out text-red-400 text-2xl" />
-            </div>
-            <h3 class="text-lg font-bold texto-glass mb-2">¿Cerrar sesión?</h3>
-            <p class="texto-glass-suave text-sm mb-6">Tu sesión se cerrará y tendrás que volver a iniciar sesión.</p>
-            <div class="flex gap-3">
-              <button
-                @click="dialogoCerrarSesion = false"
-                class="flex-1 py-2 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
-                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
-              >
-                Cancelar
-              </button>
-              <button
-                @click="confirmarCerrarSesion"
-                class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-                style="background: linear-gradient(135deg, #ef4444, #dc2626)"
-              >
-                Sí, cerrar sesión
-              </button>
             </div>
           </div>
         </div>
@@ -147,7 +115,6 @@
         <span class="text-xs">{{ item.etiquetaCorta }}</span>
       </RouterLink>
 
-      <!-- Botón cerrar sesión en móvil -->
       <button
         @click="cerrarSesion"
         class="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all"
@@ -157,6 +124,39 @@
         <span class="text-xs">Salir</span>
       </button>
     </nav>
+
+    <!-- Diálogo confirmar cerrar sesión (nivel raíz) -->
+    <div
+      v-if="dialogoCerrarSesion"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+    >
+      <div class="glass w-full max-w-sm p-6 text-center animar-dialogo">
+        <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+          style="background: rgba(239,68,68,0.15)">
+          <i class="pi pi-sign-out text-red-400 text-2xl" />
+        </div>
+        <h3 class="text-lg font-bold texto-glass mb-2">¿Cerrar sesión?</h3>
+        <p class="texto-glass-suave text-sm mb-6">Tu sesión se cerrará y tendrás que volver a iniciar sesión.</p>
+        <div class="flex gap-3">
+          <button
+            @click="dialogoCerrarSesion = false"
+            class="flex-1 py-2 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
+            style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="confirmarCerrarSesion"
+            class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+            style="background: linear-gradient(135deg, #ef4444, #dc2626)"
+          >
+            Sí, cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
