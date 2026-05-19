@@ -273,5 +273,19 @@ async function cargarDatos() {
   }
 }
 
-onMounted(() => cargarDatos())
+async function verificarRecurrentes() {
+  try {
+    // Al listar recurrentes el backend ejecuta automáticamente los pendientes
+    await api.get('/recurrentes/')
+  } catch {
+    // Si falla no bloqueamos el dashboard
+  }
+}
+
+onMounted(() => {
+  cargarDatos()
+  cargarTransaccionesRecientes()
+  cargarCategorias()
+  verificarRecurrentes()
+})
 </script>
