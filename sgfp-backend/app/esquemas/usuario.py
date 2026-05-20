@@ -23,9 +23,14 @@ class UsuarioActualizar(BaseModel):
     contrasena: Optional[str] = None
 
 
-class UsuarioRespuesta(UsuarioBase):
+class UsuarioRespuesta(BaseModel):
     id: int
+    nombre: str
+    email: str
+    moneda: str
+    zona_horaria: str
     activo: bool
+    es_admin: bool = False
 
     class Config:
         from_attributes = True
