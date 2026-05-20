@@ -14,6 +14,8 @@ const Presupuestos = () => import('../vistas/Presupuestos.vue')
 const Cuentas = () => import('../vistas/Cuentas.vue')
 const Perfil = () => import('../vistas/Perfil.vue')
 const Recurrentes = () => import('../vistas/Recurrentes.vue')
+const Administracion = () => import('../vistas/Administracion.vue')
+
 
 const rutas = [
     {
@@ -75,7 +77,13 @@ const rutas = [
         name: 'Recurrentes',
         component: Recurrentes,
         meta: { requiereAuth: true }
-    }
+    },
+    {
+        path: '/admin',
+        name: 'Administracion',
+        component: Administracion,
+        meta: { requiereAuth: true }
+    },
 ]
 
 const enrutador = createRouter({

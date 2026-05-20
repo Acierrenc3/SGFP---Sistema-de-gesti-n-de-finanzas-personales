@@ -174,15 +174,28 @@ const toast = useToast()
 const autenticacion = useAutenticacionStore()
 const notificacionesStore = useNotificacionesStore()
 
-const menuItems = [
-  { etiqueta: 'Dashboard', etiquetaCorta: 'Inicio', ruta: '/dashboard', icono: 'pi pi-home' },
-  { etiqueta: 'Transacciones', etiquetaCorta: 'Movimientos', ruta: '/transacciones', icono: 'pi pi-arrow-right-arrow-left' },
-  { etiqueta: 'Recurrentes', etiquetaCorta: 'Recurrentes', ruta: '/recurrentes', icono: 'pi pi-sync' },
-  { etiqueta: 'Categorías', etiquetaCorta: 'Categorías', ruta: '/categorias', icono: 'pi pi-tag' },
-  { etiqueta: 'Presupuestos', etiquetaCorta: 'Presupuesto', ruta: '/presupuestos', icono: 'pi pi-wallet' },
-  { etiqueta: 'Cuentas', etiquetaCorta: 'Cuentas', ruta: '/cuentas', icono: 'pi pi-credit-card' },
-  { etiqueta: 'Perfil', etiquetaCorta: 'Perfil', ruta: '/perfil', icono: 'pi pi-user' }
-]
+const menuItems = computed(() => {
+  const items = [
+    { etiqueta: 'Dashboard', etiquetaCorta: 'Inicio', ruta: '/dashboard', icono: 'pi pi-home' },
+    { etiqueta: 'Transacciones', etiquetaCorta: 'Movimientos', ruta: '/transacciones', icono: 'pi pi-arrow-right-arrow-left' },
+    { etiqueta: 'Recurrentes', etiquetaCorta: 'Recurrentes', ruta: '/recurrentes', icono: 'pi pi-sync' },
+    { etiqueta: 'Categorías', etiquetaCorta: 'Categorías', ruta: '/categorias', icono: 'pi pi-tag' },
+    { etiqueta: 'Presupuestos', etiquetaCorta: 'Presupuesto', ruta: '/presupuestos', icono: 'pi pi-wallet' },
+    { etiqueta: 'Cuentas', etiquetaCorta: 'Cuentas', ruta: '/cuentas', icono: 'pi pi-credit-card' },
+    { etiqueta: 'Perfil', etiquetaCorta: 'Perfil', ruta: '/perfil', icono: 'pi pi-user' }
+  ]
+
+  if (autenticacion.usuario?.es_admin) {
+    items.push({
+      etiqueta: 'Administración',
+      etiquetaCorta: 'Admin',
+      ruta: '/admin',
+      icono: 'pi pi-shield'
+    })
+  }
+
+  return items
+})
 
 const inicialUsuario = computed(() => {
   return autenticacion.usuario?.nombre?.charAt(0).toUpperCase() || 'U'

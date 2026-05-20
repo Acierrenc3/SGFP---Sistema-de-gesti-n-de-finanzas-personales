@@ -18,6 +18,7 @@ from app.api.endpoints import (
 from app.core.configuracion import configuracion
 from app.db.base import Base
 from app.db.sesion import motor
+from app.api.endpoints import administracion
 
 # Crea todas las tablas en la base de datos al arrancar
 Base.metadata.create_all(bind=motor)
@@ -94,6 +95,12 @@ app.include_router(
     tags=["Recurrentes"]
 )
 
+app.include_router(
+    administracion.enrutador,
+    prefix="/admin",
+    tags=["Administración"]
+)
+
 
 @app.get("/", tags=["Estado"])
 def estado():
@@ -104,3 +111,5 @@ def estado():
         "version": "1.0.0",
         "documentacion": "/docs"
     }
+
+    

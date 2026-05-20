@@ -17,6 +17,7 @@ class Usuario(Base):
     moneda = Column(String(10), nullable=False, default="EUR")
     zona_horaria = Column(String(50), nullable=False, default="Atlantic/Canary")
     activo = Column(Boolean, default=True, nullable=False)
+    es_admin = Column(Boolean, default=False, nullable=False)
 
     transacciones = relationship(
         "Transaccion",
