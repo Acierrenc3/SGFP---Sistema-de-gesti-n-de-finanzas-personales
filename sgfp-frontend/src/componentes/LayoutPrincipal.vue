@@ -97,13 +97,14 @@
       <slot />
     </main>
 
-    <!-- Barra de navegación inferior (solo móvil) -->
+    <!-- Barra navegación inferior móvil -->
     <nav
       class="md:hidden fixed bottom-0 left-0 right-0 z-20 flex items-center justify-around px-2 py-2"
       style="background: rgba(26,26,46,0.97); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.1)"
     >
+      <!-- Primeros 4 items -->
       <RouterLink
-        v-for="item in menuItems"
+        v-for="item in menuItems.slice(0, 4)"
         :key="item.ruta"
         :to="item.ruta"
         class="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all"
@@ -115,15 +116,99 @@
         <span class="text-xs">{{ item.etiquetaCorta }}</span>
       </RouterLink>
 
+      <!-- Botón menú hamburguesa -->
       <button
-        @click="cerrarSesion"
+        @click="menuMovilAbierto = true"
         class="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all"
         style="color: rgba(255,255,255,0.4)"
       >
-        <i class="pi pi-sign-out text-xl" />
-        <span class="text-xs">Salir</span>
+        <i class="pi pi-bars text-xl" />
+        <span class="text-xs">Más</span>
       </button>
     </nav>
+
+    <!-- Panel lateral móvil -->
+    <Transition
+      enter-active-class="transition-all duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-all duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="menuMovilAbierto"
+        class="md:hidden fixed inset-0 z-50 flex"
+        style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+        @click.self="menuMovilAbierto = false"
+      >
+        <!-- Panel deslizante -->
+        <Transition
+          enter-active-class="transition-transform duration-300"
+          enter-from-class="-translate-x-full"
+          enter-to-class="translate-x-0"
+          leave-active-class="transition-transform duration-200"
+          leave-from-class="translate-x-0"
+          leave-to-class="-translate-x-full"
+        >
+          <div
+            v-if="menuMovilAbierto"
+            class="w-72 h-full flex flex-col"
+            style="background: rgba(26,26,46,0.98); backdrop-filter: blur(16px); border-right: 1px solid rgba(255,255,255,0.1)"
+          >
+            <!-- Cabecera panel -->
+            <div class="flex items-center justify-between p-5"
+              style="border-bottom: 1px solid rgba(255,255,255,0.08)">
+              <div class="flex items-center gap-3">
+                <img src="/logo.png" alt="SGFP" class="w-10 h-10 rounded-xl object-cover" />
+                <div>
+                  <p class="texto-glass font-bold">SGFP</p>
+                  <p class="texto-glass-suave text-xs">{{ autenticacion.usuario?.nombre }}</p>
+                </div>
+              </div>
+              <button
+                @click="menuMovilAbierto = false"
+                class="w-8 h-8 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+                style="background: rgba(255,255,255,0.08)"
+              >
+                <i class="pi pi-times text-sm" />
+              </button>
+            </div>
+
+            <!-- Menú completo -->
+            <nav class="flex-1 p-4 overflow-y-auto">
+              <ul class="flex flex-col gap-1">
+                <li v-for="item in menuItems" :key="item.ruta">
+                  <RouterLink
+                    :to="item.ruta"
+                    @click="menuMovilAbierto = false"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all texto-glass-suave"
+                    :class="esRutaActiva(item.ruta) ? 'text-white font-medium' : 'hover:bg-white/10'"
+                    :style="esRutaActiva(item.ruta)
+                      ? 'background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(0,180,216,0.5)); border: 1px solid rgba(255,255,255,0.15)'
+                      : ''"
+                  >
+                    <i :class="item.icono" class="text-lg" />
+                    <span class="text-sm">{{ item.etiqueta }}</span>
+                  </RouterLink>
+                </li>
+              </ul>
+            </nav>
+
+            <!-- Cerrar sesión -->
+            <div class="p-4" style="border-top: 1px solid rgba(255,255,255,0.08)">
+              <button
+                @click="cerrarSesion"
+                class="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm transition-all texto-glass-suave hover:text-red-400 hover:bg-red-400/10"
+              >
+                <i class="pi pi-sign-out" />
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
 
     <!-- Diálogo confirmar cerrar sesión (nivel raíz) -->
     <div
@@ -174,6 +259,9 @@ const toast = useToast()
 const autenticacion = useAutenticacionStore()
 const notificacionesStore = useNotificacionesStore()
 
+const menuMovilAbierto = ref(false)
+const dialogoCerrarSesion = ref(false)
+
 const menuItems = computed(() => {
   const items = [
     { etiqueta: 'Dashboard', etiquetaCorta: 'Inicio', ruta: '/dashboard', icono: 'pi pi-home' },
@@ -205,9 +293,8 @@ function esRutaActiva(rutaItem) {
   return ruta.path === rutaItem
 }
 
-const dialogoCerrarSesion = ref(false)
-
 function cerrarSesion() {
+  menuMovilAbierto.value = false
   dialogoCerrarSesion.value = true
 }
 
