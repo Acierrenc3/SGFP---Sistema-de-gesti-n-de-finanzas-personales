@@ -47,3 +47,12 @@ class Transaccion(Base):
     usuario = relationship("Usuario", back_populates="transacciones")
     categoria = relationship("Categoria", back_populates="transacciones")
     cuenta = relationship("Cuenta", back_populates="transacciones")
+
+    from sqlalchemy.orm import relationship
+
+    # Añade al final de los atributos de la clase Transaccion:
+    desgloses = relationship(
+        "DesgloseTransaccion",
+        back_populates="transaccion",
+        cascade="all, delete-orphan"
+    )

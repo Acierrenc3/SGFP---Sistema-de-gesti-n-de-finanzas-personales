@@ -45,7 +45,6 @@
             </option>
           </select>
 
-          <!-- Búsqueda por descripción -->
           <div class="relative">
             <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 texto-glass-suave text-sm" />
             <input
@@ -105,8 +104,9 @@
           <div
             v-for="transaccion in transacciones"
             :key="transaccion.id"
-            class="hidden md:grid grid-cols-5 px-6 py-4 items-center transition-all hover:bg-white/5 group animar-entrada"
+            class="hidden md:grid grid-cols-5 px-6 py-4 items-center transition-all hover:bg-white/5 group animar-entrada cursor-pointer"
             style="border-bottom: 1px solid rgba(255,255,255,0.05)"
+            @click="abrirDesglose(transaccion)"
           >
             <span class="texto-glass text-sm">{{ formatearFecha(transaccion.fecha) }}</span>
             <span>
@@ -120,7 +120,14 @@
               </span>
             </span>
             <span class="texto-glass text-sm truncate">{{ transaccion.descripcion || '-' }}</span>
-            <span class="texto-glass-suave text-sm">{{ obtenerNombreCategoria(transaccion.id_categoria) }}</span>
+            <div class="flex items-center gap-1">
+              <span class="texto-glass-suave text-sm">{{ obtenerNombreCategoria(transaccion.id_categoria) }}</span>
+              <i
+                v-if="transaccion.desgloses?.length"
+                class="pi pi-list text-xs texto-glass-suave ml-1"
+                title="Tiene desglose"
+              />
+            </div>
             <div class="flex items-center justify-end gap-3">
               <span
                 class="font-bold text-sm"
@@ -130,14 +137,14 @@
               </span>
               <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  @click="abrirDialogo(transaccion)"
+                  @click.stop="abrirDialogo(transaccion)"
                   class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
                   style="background: rgba(255,255,255,0.08)"
                 >
                   <i class="pi pi-pencil text-xs" />
                 </button>
                 <button
-                  @click="confirmarEliminar(transaccion)"
+                  @click.stop="confirmarEliminar(transaccion)"
                   class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
                   style="background: rgba(255,255,255,0.08)"
                 >
@@ -151,8 +158,9 @@
           <div
             v-for="transaccion in transacciones"
             :key="`movil-${transaccion.id}`"
-            class="md:hidden flex items-center justify-between px-4 py-3 animar-entrada"
+            class="md:hidden flex items-center justify-between px-4 py-3 animar-entrada cursor-pointer"
             style="border-bottom: 1px solid rgba(255,255,255,0.05)"
+            @click="abrirDesglose(transaccion)"
           >
             <div class="flex items-center gap-3">
               <div
@@ -167,9 +175,16 @@
                 />
               </div>
               <div>
-                <p class="texto-glass text-sm font-medium">
-                  {{ transaccion.descripcion || obtenerNombreCategoria(transaccion.id_categoria) }}
-                </p>
+                <div class="flex items-center gap-1">
+                  <p class="texto-glass text-sm font-medium">
+                    {{ transaccion.descripcion || obtenerNombreCategoria(transaccion.id_categoria) }}
+                  </p>
+                  <i
+                    v-if="transaccion.desgloses?.length"
+                    class="pi pi-list text-xs texto-glass-suave"
+                    title="Tiene desglose"
+                  />
+                </div>
                 <p class="texto-glass-suave text-xs">
                   {{ obtenerNombreCategoria(transaccion.id_categoria) }} · {{ formatearFecha(transaccion.fecha) }}
                 </p>
@@ -184,14 +199,14 @@
               </span>
               <div class="flex gap-1">
                 <button
-                  @click="abrirDialogo(transaccion)"
+                  @click.stop="abrirDialogo(transaccion)"
                   class="w-7 h-7 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
                   style="background: rgba(255,255,255,0.08)"
                 >
                   <i class="pi pi-pencil text-xs" />
                 </button>
                 <button
-                  @click="confirmarEliminar(transaccion)"
+                  @click.stop="confirmarEliminar(transaccion)"
                   class="w-7 h-7 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors"
                   style="background: rgba(255,255,255,0.08)"
                 >
@@ -220,7 +235,6 @@
           >
             <i class="pi pi-chevron-left texto-glass text-sm" />
           </button>
-
           <button
             v-for="pagina in totalPaginas"
             :key="pagina"
@@ -232,7 +246,6 @@
           >
             {{ pagina }}
           </button>
-
           <button
             @click="cambiarPagina(paginaActual + 1)"
             :disabled="paginaActual === totalPaginas"
@@ -266,6 +279,7 @@
           </div>
 
           <form @submit.prevent="guardarTransaccion" class="flex flex-col gap-4">
+            <!-- Tipo -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Tipo</label>
               <div class="flex gap-2">
@@ -286,6 +300,7 @@
               </div>
             </div>
 
+            <!-- Importe -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Importe</label>
               <input
@@ -301,6 +316,7 @@
               <small class="text-red-400" v-if="errores.importe">{{ errores.importe }}</small>
             </div>
 
+            <!-- Fecha -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Fecha</label>
               <input
@@ -313,6 +329,7 @@
               <small class="text-red-400" v-if="errores.fecha">{{ errores.fecha }}</small>
             </div>
 
+            <!-- Categoría -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Categoría</label>
               <select
@@ -329,6 +346,7 @@
               <small class="text-red-400" v-if="errores.id_categoria">{{ errores.id_categoria }}</small>
             </div>
 
+            <!-- Cuenta -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Cuenta</label>
               <select
@@ -345,6 +363,7 @@
               <small class="text-red-400" v-if="errores.id_cuenta">{{ errores.id_cuenta }}</small>
             </div>
 
+            <!-- Descripción -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Descripción (opcional)</label>
               <textarea
@@ -356,6 +375,66 @@
               />
             </div>
 
+            <!-- Desglose -->
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <label class="texto-glass text-sm font-medium">Desglose (opcional)</label>
+                <button
+                  type="button"
+                  @click="agregarLineaDesglose"
+                  class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-all texto-glass-suave hover:text-white"
+                  style="background: rgba(255,255,255,0.08)"
+                >
+                  <i class="pi pi-plus text-xs" />
+                  Añadir línea
+                </button>
+              </div>
+
+              <div v-if="formulario.desgloses.length" class="flex flex-col gap-2">
+                <div
+                  v-for="(linea, index) in formulario.desgloses"
+                  :key="index"
+                  class="flex items-center gap-2"
+                >
+                  <input
+                    v-model="linea.concepto"
+                    type="text"
+                    placeholder="Concepto"
+                    class="flex-1 px-3 py-2 rounded-xl text-white text-sm placeholder-white/40 outline-none"
+                    style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                  />
+                  <input
+                    v-model="linea.importe"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    class="w-24 px-3 py-2 rounded-xl text-white text-sm placeholder-white/40 outline-none"
+                    style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+                  />
+                  <button
+                    type="button"
+                    @click="eliminarLineaDesglose(index)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400/50 hover:text-red-400 transition-colors flex-shrink-0"
+                    style="background: rgba(255,255,255,0.08)"
+                  >
+                    <i class="pi pi-times text-xs" />
+                  </button>
+                </div>
+
+                <!-- Total desglose -->
+                <div class="flex justify-between px-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.08)">
+                  <span class="texto-glass-suave text-xs">Total desglose</span>
+                  <span class="texto-glass text-xs font-medium">{{ formatearMoneda(totalDesglose) }}</span>
+                </div>
+              </div>
+
+              <p v-else class="texto-glass-suave text-xs">
+                Añade líneas para desglosar el gasto o ingreso en conceptos individuales.
+              </p>
+            </div>
+
+            <!-- Botones -->
             <div class="flex gap-3 mt-2">
               <button
                 type="button"
@@ -410,6 +489,80 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal desglose -->
+      <div
+        v-if="desgloseVisible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
+        @click.self="desgloseVisible = false"
+      >
+        <div class="glass w-full max-w-lg p-6 animar-dialogo max-h-screen overflow-y-auto">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-lg font-bold texto-glass">Desglose</h3>
+              <p class="texto-glass-suave text-xs mt-0.5">
+                {{ transaccionDesglose?.descripcion || obtenerNombreCategoria(transaccionDesglose?.id_categoria) }}
+              </p>
+            </div>
+            <button
+              @click="desgloseVisible = false"
+              class="w-8 h-8 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
+              style="background: rgba(255,255,255,0.08)"
+            >
+              <i class="pi pi-times text-sm" />
+            </button>
+          </div>
+
+          <!-- Sin desglose -->
+          <div v-if="!transaccionDesglose?.desgloses?.length" class="flex flex-col items-center py-8 texto-glass-suave">
+            <i class="pi pi-list text-3xl mb-2 opacity-30" />
+            <p class="text-sm mb-1">Sin desglose disponible</p>
+            <p class="text-xs opacity-60 mb-3">Total de la transacción</p>
+            <p
+              class="text-2xl font-bold"
+              :class="transaccionDesglose?.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
+            >
+              {{ transaccionDesglose?.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(transaccionDesglose?.importe) }}
+            </p>
+          </div>
+
+          <!-- Con desglose -->
+          <div v-else>
+            <div style="border-bottom: 1px solid rgba(255,255,255,0.08)" class="mb-4">
+              <div class="grid grid-cols-2 px-2 py-2 text-xs font-medium texto-glass-suave uppercase tracking-wider mb-2">
+                <span>Concepto</span>
+                <span class="text-right">Importe</span>
+              </div>
+              <div
+                v-for="linea in transaccionDesglose.desgloses"
+                :key="linea.id"
+                class="grid grid-cols-2 px-2 py-3 transition-all hover:bg-white/5"
+                style="border-top: 1px solid rgba(255,255,255,0.05)"
+              >
+                <span class="texto-glass text-sm">{{ linea.concepto }}</span>
+                <span
+                  class="text-right text-sm font-medium"
+                  :class="transaccionDesglose.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
+                >
+                  {{ transaccionDesglose.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(linea.importe) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Total -->
+            <div class="grid grid-cols-2 px-2 py-3">
+              <span class="texto-glass font-bold">Total</span>
+              <span
+                class="text-right font-bold text-lg"
+                :class="transaccionDesglose.tipo === 'ingreso' ? 'text-green-400' : 'text-red-400'"
+              >
+                {{ transaccionDesglose.tipo === 'ingreso' ? '+' : '-' }}{{ formatearMoneda(transaccionDesglose.importe) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </LayoutPrincipal>
 </template>
@@ -431,6 +584,8 @@ const cargando = ref(false)
 const guardando = ref(false)
 const dialogoVisible = ref(false)
 const dialogoEliminarVisible = ref(false)
+const desgloseVisible = ref(false)
+const transaccionDesglose = ref(null)
 const transaccionEditando = ref(null)
 const transaccionEliminar = ref(null)
 const errores = ref({})
@@ -459,11 +614,16 @@ const formulario = ref({
   fecha: new Date().toISOString().split('T')[0],
   descripcion: '',
   id_categoria: '',
-  id_cuenta: ''
+  id_cuenta: '',
+  desgloses: []
 })
 
 const categoriasFiltradas = computed(() => {
   return categorias.value.filter(c => c.tipo === formulario.value.tipo)
+})
+
+const totalDesglose = computed(() => {
+  return formulario.value.desgloses.reduce((sum, l) => sum + (parseFloat(l.importe) || 0), 0)
 })
 
 function obtenerNombreCategoria(id) {
@@ -483,6 +643,19 @@ function formatearMoneda(valor) {
     style: 'currency',
     currency: autenticacion.usuario?.moneda || 'EUR'
   }).format(valor)
+}
+
+function abrirDesglose(transaccion) {
+  transaccionDesglose.value = transaccion
+  desgloseVisible.value = true
+}
+
+function agregarLineaDesglose() {
+  formulario.value.desgloses.push({ concepto: '', importe: '' })
+}
+
+function eliminarLineaDesglose(index) {
+  formulario.value.desgloses.splice(index, 1)
 }
 
 async function cargarTransacciones() {
@@ -543,7 +716,11 @@ function abrirDialogo(transaccion = null) {
       fecha,
       descripcion: transaccion.descripcion || '',
       id_categoria: transaccion.id_categoria,
-      id_cuenta: transaccion.id_cuenta
+      id_cuenta: transaccion.id_cuenta,
+      desgloses: transaccion.desgloses?.map(d => ({
+        concepto: d.concepto,
+        importe: d.importe
+      })) || []
     }
   } else {
     formulario.value = {
@@ -552,7 +729,8 @@ function abrirDialogo(transaccion = null) {
       fecha: new Date().toISOString().split('T')[0],
       descripcion: '',
       id_categoria: '',
-      id_cuenta: ''
+      id_cuenta: '',
+      desgloses: []
     }
   }
   dialogoVisible.value = true
@@ -574,7 +752,10 @@ async function guardarTransaccion() {
     const datos = {
       ...formulario.value,
       importe: parseFloat(formulario.value.importe),
-      fecha: new Date(formulario.value.fecha).toISOString()
+      fecha: new Date(formulario.value.fecha).toISOString(),
+      desgloses: formulario.value.desgloses
+        .filter(d => d.concepto && d.importe)
+        .map(d => ({ concepto: d.concepto, importe: parseFloat(d.importe) }))
     }
     if (transaccionEditando.value) {
       await api.put(`/transacciones/${transaccionEditando.value.id}`, datos)

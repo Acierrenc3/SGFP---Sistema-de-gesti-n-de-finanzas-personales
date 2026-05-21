@@ -14,10 +14,26 @@ from app.esquemas.transaccion import (
     TransaccionCrear,
     TransaccionRespuesta
 )
+from app.modelos.desglose import DesgloseTransaccion
 from app.modelos.transaccion import Transaccion
 from app.modelos.usuario import Usuario
 
 enrutador = APIRouter()
+
+
+def sincronizar_desgloses(sesion: Session, transaccion: Transaccion, desgloses: list):
+    """Elimina los desgloses existentes y crea los nuevos."""
+    for desglose in transaccion.desgloses:
+        sesion.delete(desglose)
+    sesion.flush()
+
+    for datos in desgloses:
+        nuevo = DesgloseTransaccion(
+            concepto=datos.concepto,
+            importe=datos.importe,
+            id_transaccion=transaccion.id
+        )
+        sesion.add(nuevo)
 
 
 @enrutador.get(
@@ -25,20 +41,17 @@ enrutador = APIRouter()
     summary="Listar transacciones del usuario con paginación"
 )
 def listar_transacciones(
-    tipo: Optional[str] = Query(None, description="Filtrar por tipo: 'ingreso' o 'gasto'"),
-    id_categoria: Optional[int] = Query(None, description="Filtrar por categoría"),
-    id_cuenta: Optional[int] = Query(None, description="Filtrar por cuenta"),
-    fecha_inicio: Optional[datetime] = Query(None, description="Filtrar desde esta fecha"),
-    fecha_fin: Optional[datetime] = Query(None, description="Filtrar hasta esta fecha"),
-    descripcion: Optional[str] = Query(None, description="Buscar por descripción"),
-    pagina: int = Query(1, ge=1, description="Número de página"),
-    limite: int = Query(10, ge=1, le=100, description="Transacciones por página"),
+    tipo: Optional[str] = Query(None),
+    id_categoria: Optional[int] = Query(None),
+    id_cuenta: Optional[int] = Query(None),
+    fecha_inicio: Optional[datetime] = Query(None),
+    fecha_fin: Optional[datetime] = Query(None),
+    descripcion: Optional[str] = Query(None),
+    pagina: int = Query(1, ge=1),
+    limite: int = Query(10, ge=1, le=100),
     sesion: Session = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
 ):
-    """
-    Devuelve las transacciones del usuario con filtros y paginación.
-    """
     consulta = sesion.query(Transaccion).filter(
         Transaccion.id_usuario == usuario_actual.id
     )
@@ -85,13 +98,26 @@ def crear_transaccion(
     sesion: Session = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
 ):
-    """Crea una nueva transacción vinculada al usuario autenticado."""
+    desgloses = datos.desgloses or []
+    datos_transaccion = datos.model_dump(exclude={"desgloses"})
+
     nueva_transaccion = Transaccion(
-        **datos.model_dump(),
+        **datos_transaccion,
         id_usuario=usuario_actual.id
     )
 
     sesion.add(nueva_transaccion)
+    sesion.commit()
+    sesion.refresh(nueva_transaccion)
+
+    for desglose in desgloses:
+        nuevo = DesgloseTransaccion(
+            concepto=desglose.concepto,
+            importe=desglose.importe,
+            id_transaccion=nueva_transaccion.id
+        )
+        sesion.add(nuevo)
+
     sesion.commit()
     sesion.refresh(nueva_transaccion)
 
@@ -108,7 +134,6 @@ def obtener_transaccion(
     sesion: Session = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
 ):
-    """Devuelve una transacción específica del usuario autenticado."""
     transaccion = sesion.query(Transaccion).filter(
         Transaccion.id == id,
         Transaccion.id_usuario == usuario_actual.id
@@ -134,7 +159,6 @@ def actualizar_transaccion(
     sesion: Session = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
 ):
-    """Actualiza los campos indicados de una transacción existente."""
     transaccion = sesion.query(Transaccion).filter(
         Transaccion.id == id,
         Transaccion.id_usuario == usuario_actual.id
@@ -146,9 +170,14 @@ def actualizar_transaccion(
             detail="Transacción no encontrada"
         )
 
-    datos_actualizados = datos.model_dump(exclude_unset=True)
+    desgloses = datos.desgloses
+    datos_actualizados = datos.model_dump(exclude_unset=True, exclude={"desgloses"})
+
     for campo, valor in datos_actualizados.items():
         setattr(transaccion, campo, valor)
+
+    if desgloses is not None:
+        sincronizar_desgloses(sesion, transaccion, desgloses)
 
     sesion.commit()
     sesion.refresh(transaccion)
@@ -166,7 +195,6 @@ def eliminar_transaccion(
     sesion: Session = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
 ):
-    """Elimina una transacción del usuario autenticado."""
     transaccion = sesion.query(Transaccion).filter(
         Transaccion.id == id,
         Transaccion.id_usuario == usuario_actual.id
