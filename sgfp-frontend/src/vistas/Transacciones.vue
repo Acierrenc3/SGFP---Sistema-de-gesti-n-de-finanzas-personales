@@ -21,10 +21,10 @@
 
       <!-- Filtros -->
       <div class="glass p-4 mb-4 animar-entrada">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
           <select
             v-model="filtros.tipo"
-            @change="cargarTransacciones"
+            @change="aplicarFiltros"
             class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
             style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
           >
@@ -35,7 +35,7 @@
 
           <select
             v-model="filtros.id_categoria"
-            @change="cargarTransacciones"
+            @change="aplicarFiltros"
             class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
             style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
           >
@@ -45,18 +45,32 @@
             </option>
           </select>
 
+          <!-- Búsqueda por descripción -->
+          <div class="relative">
+            <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 texto-glass-suave text-sm" />
+            <input
+              v-model="filtros.descripcion"
+              type="text"
+              placeholder="Buscar por descripción..."
+              @input="aplicarFiltros"
+              class="w-full pl-9 pr-4 py-2 rounded-xl text-white text-sm placeholder-white/40 outline-none"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input
             v-model="filtros.fecha_inicio"
             type="date"
-            @change="cargarTransacciones"
+            @change="aplicarFiltros"
             class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
             style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color-scheme: dark"
           />
-
           <input
             v-model="filtros.fecha_fin"
             type="date"
-            @change="cargarTransacciones"
+            @change="aplicarFiltros"
             class="px-4 py-2 rounded-xl text-white text-sm outline-none cursor-pointer"
             style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color-scheme: dark"
           />
@@ -141,7 +155,6 @@
             style="border-bottom: 1px solid rgba(255,255,255,0.05)"
           >
             <div class="flex items-center gap-3">
-              <!-- Icono tipo -->
               <div
                 class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 :style="transaccion.tipo === 'ingreso'
@@ -153,7 +166,6 @@
                   :style="transaccion.tipo === 'ingreso' ? 'color: #4ade80' : 'color: #f87171'"
                 />
               </div>
-              <!-- Info -->
               <div>
                 <p class="texto-glass text-sm font-medium">
                   {{ transaccion.descripcion || obtenerNombreCategoria(transaccion.id_categoria) }}
@@ -163,8 +175,6 @@
                 </p>
               </div>
             </div>
-
-            <!-- Importe y acciones -->
             <div class="flex items-center gap-2">
               <span
                 class="font-bold text-sm"
@@ -193,6 +203,47 @@
         </template>
       </div>
 
+      <!-- Paginación -->
+      <div
+        v-if="totalPaginas > 1"
+        class="flex items-center justify-between px-6 py-4 mt-1 glass"
+      >
+        <p class="texto-glass-suave text-sm">
+          {{ total }} transacciones · Página {{ paginaActual }} de {{ totalPaginas }}
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            @click="cambiarPagina(paginaActual - 1)"
+            :disabled="paginaActual === 1"
+            class="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+            style="background: rgba(255,255,255,0.08)"
+          >
+            <i class="pi pi-chevron-left texto-glass text-sm" />
+          </button>
+
+          <button
+            v-for="pagina in totalPaginas"
+            :key="pagina"
+            @click="cambiarPagina(pagina)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all"
+            :style="pagina === paginaActual
+              ? 'background: linear-gradient(135deg, #7c3aed, #00b4d8); color: white'
+              : 'background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5)'"
+          >
+            {{ pagina }}
+          </button>
+
+          <button
+            @click="cambiarPagina(paginaActual + 1)"
+            :disabled="paginaActual === totalPaginas"
+            class="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+            style="background: rgba(255,255,255,0.08)"
+          >
+            <i class="pi pi-chevron-right texto-glass text-sm" />
+          </button>
+        </div>
+      </div>
+
       <!-- Diálogo crear/editar -->
       <div
         v-if="dialogoVisible"
@@ -215,7 +266,6 @@
           </div>
 
           <form @submit.prevent="guardarTransaccion" class="flex flex-col gap-4">
-            <!-- Tipo -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Tipo</label>
               <div class="flex gap-2">
@@ -236,7 +286,6 @@
               </div>
             </div>
 
-            <!-- Importe -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Importe</label>
               <input
@@ -252,7 +301,6 @@
               <small class="text-red-400" v-if="errores.importe">{{ errores.importe }}</small>
             </div>
 
-            <!-- Fecha -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Fecha</label>
               <input
@@ -265,7 +313,6 @@
               <small class="text-red-400" v-if="errores.fecha">{{ errores.fecha }}</small>
             </div>
 
-            <!-- Categoría -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Categoría</label>
               <select
@@ -282,7 +329,6 @@
               <small class="text-red-400" v-if="errores.id_categoria">{{ errores.id_categoria }}</small>
             </div>
 
-            <!-- Cuenta -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Cuenta</label>
               <select
@@ -299,7 +345,6 @@
               <small class="text-red-400" v-if="errores.id_cuenta">{{ errores.id_cuenta }}</small>
             </div>
 
-            <!-- Descripción -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Descripción (opcional)</label>
               <textarea
@@ -311,7 +356,6 @@
               />
             </div>
 
-            <!-- Botones -->
             <div class="flex gap-3 mt-2">
               <button
                 type="button"
@@ -391,12 +435,23 @@ const transaccionEditando = ref(null)
 const transaccionEliminar = ref(null)
 const errores = ref({})
 
+const paginaActual = ref(1)
+const limite = ref(10)
+const total = ref(0)
+const totalPaginas = ref(0)
+
 const tiposTransaccion = [
   { etiqueta: 'Ingreso', valor: 'ingreso' },
   { etiqueta: 'Gasto', valor: 'gasto' }
 ]
 
-const filtros = ref({ tipo: '', id_categoria: '', fecha_inicio: '', fecha_fin: '' })
+const filtros = ref({
+  tipo: '',
+  id_categoria: '',
+  fecha_inicio: '',
+  fecha_fin: '',
+  descripcion: ''
+})
 
 const formulario = ref({
   tipo: 'gasto',
@@ -429,18 +484,33 @@ function formatearMoneda(valor) {
 async function cargarTransacciones() {
   cargando.value = true
   try {
-    const params = {}
+    const params = { pagina: paginaActual.value, limite: limite.value }
     if (filtros.value.tipo) params.tipo = filtros.value.tipo
     if (filtros.value.id_categoria) params.id_categoria = filtros.value.id_categoria
     if (filtros.value.fecha_inicio) params.fecha_inicio = new Date(filtros.value.fecha_inicio).toISOString()
     if (filtros.value.fecha_fin) params.fecha_fin = new Date(filtros.value.fecha_fin).toISOString()
+    if (filtros.value.descripcion) params.descripcion = filtros.value.descripcion
+
     const respuesta = await api.get('/transacciones/', { params })
-    transacciones.value = respuesta.data
+    transacciones.value = respuesta.data.transacciones
+    total.value = respuesta.data.total
+    totalPaginas.value = respuesta.data.paginas
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las transacciones', life: 3000 })
   } finally {
     cargando.value = false
   }
+}
+
+function cambiarPagina(nuevaPagina) {
+  if (nuevaPagina < 1 || nuevaPagina > totalPaginas.value) return
+  paginaActual.value = nuevaPagina
+  cargarTransacciones()
+}
+
+function aplicarFiltros() {
+  paginaActual.value = 1
+  cargarTransacciones()
 }
 
 async function cargarCategorias() {
