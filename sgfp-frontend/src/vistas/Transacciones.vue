@@ -471,10 +471,14 @@ function obtenerNombreCategoria(id) {
 }
 
 function formatearFecha(fecha) {
-  return new Date(fecha).toLocaleDateString('es-ES')
+  if (!fecha) return '-'
+  const d = new Date(fecha)
+  if (isNaN(d.getTime())) return '-'
+  return d.toLocaleDateString('es-ES')
 }
 
 function formatearMoneda(valor) {
+  if (valor === undefined || valor === null || isNaN(valor)) return '0,00 €'
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: autenticacion.usuario?.moneda || 'EUR'
@@ -527,10 +531,16 @@ function abrirDialogo(transaccion = null) {
   errores.value = {}
   transaccionEditando.value = transaccion
   if (transaccion) {
+    const fecha = transaccion.fecha
+      ? transaccion.fecha.includes('T')
+        ? transaccion.fecha.split('T')[0]
+        : transaccion.fecha.split(' ')[0]
+      : new Date().toISOString().split('T')[0]
+
     formulario.value = {
       tipo: transaccion.tipo,
       importe: transaccion.importe,
-      fecha: transaccion.fecha.split('T')[0],
+      fecha,
       descripcion: transaccion.descripcion || '',
       id_categoria: transaccion.id_categoria,
       id_cuenta: transaccion.id_cuenta
