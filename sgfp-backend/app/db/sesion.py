@@ -35,3 +35,11 @@ def obtener_sesion():
         yield sesion
     finally:
         sesion.close()
+
+def obtener_sesion_sync():
+    """Versión síncrona del generador de sesión para uso en WebSocket."""
+    sesion = SesionLocal()
+    try:
+        yield sesion
+    finally:
+        sesion.close()

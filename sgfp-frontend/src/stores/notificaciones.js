@@ -60,14 +60,27 @@ export const useNotificacionesStore = defineStore('notificaciones', () => {
         }
     }
 
+    // Añade dentro del store, junto a las otras funciones:
+
+    function agregarNotificacionWS(notificacion) {
+    // Evita duplicados
+    const existe = notificaciones.value.find(
+        n => n.categoria === notificacion.categoria &&
+        n.porcentaje === notificacion.porcentaje
+    )
+    if (!existe) {
+        notificaciones.value.push(notificacion)
+    }
+    }
+
     function limpiarNotificaciones() {
         notificaciones.value = []
     }
 
     return {
-        notificaciones,
-        cargando,
-        verificarPresupuestos,
-        limpiarNotificaciones
+    notificaciones,
+    verificarPresupuestos,
+    limpiarNotificaciones,
+    agregarNotificacionWS  // ← añade esto
     }
 })

@@ -19,6 +19,8 @@ from app.core.configuracion import configuracion
 from app.db.base import Base
 from app.db.sesion import motor
 from app.api.endpoints import administracion
+from app.api.endpoints import websocket
+
 
 # Crea todas las tablas en la base de datos al arrancar
 Base.metadata.create_all(bind=motor)
@@ -44,7 +46,7 @@ app.add_middleware(
         "https://sgfp-sistema-de-gesti-n-de-finanzas.vercel.app",
         "https://sgfp.xyz",
         "https://www.sgfp.xyz",
-    ]
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -101,6 +103,11 @@ app.include_router(
     administracion.enrutador,
     prefix="/admin",
     tags=["Administración"]
+)
+
+app.include_router(
+    websocket.enrutador,
+    tags=["WebSocket"]
 )
 
 

@@ -252,6 +252,8 @@ import { useToast } from 'primevue/usetoast'
 import { useAutenticacionStore } from '../stores/autenticacion'
 import { useNotificacionesStore } from '../stores/notificaciones'
 import PanelNotificaciones from './PanelNotificaciones.vue'
+import { conectarWebSocket, desconectarWebSocket } from '../servicios/websocket'
+
 
 const ruta = useRoute()
 const enrutador = useRouter()
@@ -300,6 +302,7 @@ function cerrarSesion() {
 
 function confirmarCerrarSesion() {
   dialogoCerrarSesion.value = false
+  desconectarWebSocket()
   autenticacion.cerrarSesion()
   toast.add({
     severity: 'info',
@@ -312,5 +315,6 @@ function confirmarCerrarSesion() {
 
 onMounted(() => {
   notificacionesStore.verificarPresupuestos()
+  conectarWebSocket()
 })
 </script>

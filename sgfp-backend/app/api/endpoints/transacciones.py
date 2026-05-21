@@ -3,11 +3,14 @@
 
 from typing import List, Optional
 from datetime import datetime
+import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.autenticacion import obtener_usuario_actual
+from app.core.websocket_manager import gestor_ws
 from app.db.sesion import obtener_sesion
 from app.esquemas.transaccion import (
     TransaccionActualizar,
@@ -15,6 +18,8 @@ from app.esquemas.transaccion import (
     TransaccionRespuesta
 )
 from app.modelos.desglose import DesgloseTransaccion
+from app.modelos.presupuesto import Presupuesto
+from app.modelos.categoria import Categoria
 from app.modelos.transaccion import Transaccion
 from app.modelos.usuario import Usuario
 
@@ -34,6 +39,78 @@ def sincronizar_desgloses(sesion: Session, transaccion: Transaccion, desgloses: 
             id_transaccion=transaccion.id
         )
         sesion.add(nuevo)
+
+
+async def verificar_y_notificar_presupuesto(
+    sesion: Session,
+    id_usuario: int,
+    id_categoria: int,
+    fecha: datetime
+):
+    """
+    Verifica el estado del presupuesto tras una transacción
+    y envía notificación WebSocket si supera umbrales.
+    """
+    try:
+        presupuesto = sesion.query(Presupuesto).filter(
+            Presupuesto.id_usuario == id_usuario,
+            Presupuesto.id_categoria == id_categoria,
+            Presupuesto.mes == fecha.month,
+            Presupuesto.anio == fecha.year
+        ).first()
+
+        if not presupuesto:
+            return
+
+        # Calcula el gasto actual
+        gasto_actual = sesion.query(
+            func.coalesce(func.sum(Transaccion.importe), 0)
+        ).filter(
+            Transaccion.id_usuario == id_usuario,
+            Transaccion.id_categoria == id_categoria,
+            Transaccion.tipo == 'gasto',
+            func.extract('month', Transaccion.fecha) == fecha.month,
+            func.extract('year', Transaccion.fecha) == fecha.year
+        ).scalar()
+
+        porcentaje = (float(gasto_actual) / presupuesto.importe_limite) * 100
+
+        # Obtiene el nombre de la categoría
+        categoria = sesion.query(Categoria).filter(
+            Categoria.id == id_categoria
+        ).first()
+        nombre_categoria = categoria.nombre if categoria else "Categoría"
+
+        # Envía notificación según umbral
+        if porcentaje >= 100:
+            await gestor_ws.enviar_a_usuario(id_usuario, {
+                "tipo": "presupuesto_superado",
+                "categoria": nombre_categoria,
+                "porcentaje": round(porcentaje, 1),
+                "mensaje": f"Has superado el presupuesto de {nombre_categoria} ({round(porcentaje, 1)}%)",
+                "icono": "pi-exclamation-circle",
+                "nivel": "error"
+            })
+        elif porcentaje >= 80:
+            await gestor_ws.enviar_a_usuario(id_usuario, {
+                "tipo": "presupuesto_alerta",
+                "categoria": nombre_categoria,
+                "porcentaje": round(porcentaje, 1),
+                "mensaje": f"Llevas el {round(porcentaje, 1)}% del presupuesto de {nombre_categoria}",
+                "icono": "pi-exclamation-triangle",
+                "nivel": "warning"
+            })
+        elif porcentaje >= 50:
+            await gestor_ws.enviar_a_usuario(id_usuario, {
+                "tipo": "presupuesto_info",
+                "categoria": nombre_categoria,
+                "porcentaje": round(porcentaje, 1),
+                "mensaje": f"Llevas el {round(porcentaje, 1)}% del presupuesto de {nombre_categoria}",
+                "icono": "pi-info-circle",
+                "nivel": "info"
+            })
+    except Exception:
+        pass
 
 
 @enrutador.get(
@@ -93,7 +170,7 @@ def listar_transacciones(
     status_code=status.HTTP_201_CREATED,
     summary="Crear nueva transacción"
 )
-def crear_transaccion(
+async def crear_transaccion(
     datos: TransaccionCrear,
     sesion: Session = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
@@ -120,6 +197,15 @@ def crear_transaccion(
 
     sesion.commit()
     sesion.refresh(nueva_transaccion)
+
+    # Notifica si es un gasto y hay presupuesto
+    if nueva_transaccion.tipo == 'gasto':
+        await verificar_y_notificar_presupuesto(
+            sesion,
+            usuario_actual.id,
+            nueva_transaccion.id_categoria,
+            nueva_transaccion.fecha
+        )
 
     return nueva_transaccion
 
@@ -153,7 +239,7 @@ def obtener_transaccion(
     response_model=TransaccionRespuesta,
     summary="Actualizar transacción existente"
 )
-def actualizar_transaccion(
+async def actualizar_transaccion(
     id: int,
     datos: TransaccionActualizar,
     sesion: Session = Depends(obtener_sesion),
@@ -181,6 +267,15 @@ def actualizar_transaccion(
 
     sesion.commit()
     sesion.refresh(transaccion)
+
+    # Notifica si es un gasto y hay presupuesto
+    if transaccion.tipo == 'gasto':
+        await verificar_y_notificar_presupuesto(
+            sesion,
+            usuario_actual.id,
+            transaccion.id_categoria,
+            transaccion.fecha
+        )
 
     return transaccion
 
