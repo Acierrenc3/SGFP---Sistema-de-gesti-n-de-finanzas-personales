@@ -267,7 +267,7 @@
 <section class="relative z-10 py-24 px-6">
   <div class="max-w-2xl mx-auto text-center">
     <div class="glass p-12 rounded-3xl scroll-oculto-escala">
-      <img src="/logo.png" alt="SGFP" class="w-32 h-32 rounded-2xl object-cover" />
+      <img src="/logo.png" alt="SGFP" class="w-32 h-32 rounded-2xl object-cover mx-auto mb-6" />
       <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
         Empieza hoy mismo
       </h2>
