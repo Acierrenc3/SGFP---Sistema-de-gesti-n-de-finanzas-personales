@@ -19,10 +19,9 @@
       style="background: rgba(26,26,46,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.08)"
     >
       <div class="flex items-center gap-3">
-        <img src="/logo.png" alt="SGFP" class="w-9 h-9 rounded-xl object-cover" />
+        <img src="/logo.png" alt="SGFP" class="w-24 h-24 rounded-2xl object-cover" />
         <span class="font-bold texto-glass text-lg">SGFP</span>
       </div>
-
       <div class="hidden md:flex items-center gap-8">
         <button @click="scrollTo('#features')" class="texto-glass-suave text-sm hover:text-white transition-colors">Características</button>
         <button @click="scrollTo('#como-funciona')" class="texto-glass-suave text-sm hover:text-white transition-colors">Cómo funciona</button>
@@ -268,7 +267,7 @@
 <section class="relative z-10 py-24 px-6">
   <div class="max-w-2xl mx-auto text-center">
     <div class="glass p-12 rounded-3xl scroll-oculto-escala">
-      <img src="/logo.png" alt="SGFP" class="w-16 h-16 rounded-2xl object-cover mx-auto mb-6" />
+      <img src="/logo.png" alt="SGFP" class="w-32 h-32 rounded-2xl object-cover" />
       <h2 class="text-3xl md:text-4xl font-bold texto-glass mb-4">
         Empieza hoy mismo
       </h2>
