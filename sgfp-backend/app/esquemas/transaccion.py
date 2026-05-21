@@ -1,7 +1,24 @@
-from app.esquemas.desglose import DesgloseRespuesta
+# Esquemas Pydantic para transacciones
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
+
+
+class DesgloseBase(BaseModel):
+    concepto: str
+    importe: float
+
+
+class DesgloseCrear(DesgloseBase):
+    pass
+
+
+class DesgloseRespuesta(DesgloseBase):
+    id: int
+    id_transaccion: int
+
+    class Config:
+        from_attributes = True
 
 
 class TransaccionBase(BaseModel):
