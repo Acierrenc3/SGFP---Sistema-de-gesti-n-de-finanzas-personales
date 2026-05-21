@@ -42,7 +42,9 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
         "https://sgfp-sistema-de-gesti-n-de-finanzas.vercel.app",
-    ],
+        "https://sgfp.xyz",
+        "https://www.sgfp.xyz",
+    ]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
