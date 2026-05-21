@@ -84,6 +84,11 @@ const rutas = [
         component: Administracion,
         meta: { requiereAuth: true }
     },
+    {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../vistas/NotFound.vue')
+    },
 ]
 
 const enrutador = createRouter({
