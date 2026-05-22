@@ -239,19 +239,97 @@ const formularioContrasena = ref({
 })
 
 const monedas = [
-  { etiqueta: 'Euro (€)', valor: 'EUR' },
-  { etiqueta: 'Dólar ($)', valor: 'USD' },
-  { etiqueta: 'Libra (£)', valor: 'GBP' },
-  { etiqueta: 'Franco suizo (CHF)', valor: 'CHF' }
+  // Europa
+  { etiqueta: '🇪🇺 Euro (€)', valor: 'EUR' },
+  { etiqueta: '🇬🇧 Libra esterlina (£)', valor: 'GBP' },
+  { etiqueta: '🇨🇭 Franco suizo (CHF)', valor: 'CHF' },
+  { etiqueta: '🇸🇪 Corona sueca (SEK)', valor: 'SEK' },
+  { etiqueta: '🇳🇴 Corona noruega (NOK)', valor: 'NOK' },
+  { etiqueta: '🇩🇰 Corona danesa (DKK)', valor: 'DKK' },
+  { etiqueta: '🇵🇱 Esloti polaco (PLN)', valor: 'PLN' },
+  { etiqueta: '🇨🇿 Corona checa (CZK)', valor: 'CZK' },
+  { etiqueta: '🇭🇺 Forinto húngaro (HUF)', valor: 'HUF' },
+  { etiqueta: '🇷🇴 Leu rumano (RON)', valor: 'RON' },
+  // América
+  { etiqueta: '🇺🇸 Dólar estadounidense ($)', valor: 'USD' },
+  { etiqueta: '🇨🇦 Dólar canadiense (CA$)', valor: 'CAD' },
+  { etiqueta: '🇲🇽 Peso mexicano (MX$)', valor: 'MXN' },
+  { etiqueta: '🇧🇷 Real brasileño (R$)', valor: 'BRL' },
+  { etiqueta: '🇦🇷 Peso argentino ($)', valor: 'ARS' },
+  { etiqueta: '🇨🇱 Peso chileno ($)', valor: 'CLP' },
+  { etiqueta: '🇨🇴 Peso colombiano ($)', valor: 'COP' },
+  { etiqueta: '🇵🇪 Sol peruano (S/)', valor: 'PEN' },
+  // Asia
+  { etiqueta: '🇯🇵 Yen japonés (¥)', valor: 'JPY' },
+  { etiqueta: '🇨🇳 Yuan chino (¥)', valor: 'CNY' },
+  { etiqueta: '🇰🇷 Won surcoreano (₩)', valor: 'KRW' },
+  { etiqueta: '🇮🇳 Rupia india (₹)', valor: 'INR' },
+  { etiqueta: '🇸🇬 Dólar singapurense (S$)', valor: 'SGD' },
+  { etiqueta: '🇭🇰 Dólar de Hong Kong (HK$)', valor: 'HKD' },
+  { etiqueta: '🇹🇭 Baht tailandés (฿)', valor: 'THB' },
+  { etiqueta: '🇦🇪 Dírham emiratí (د.إ)', valor: 'AED' },
+  { etiqueta: '🇸🇦 Riyal saudí (﷼)', valor: 'SAR' },
+  { etiqueta: '🇹🇷 Lira turca (₺)', valor: 'TRY' },
+  // Oceanía
+  { etiqueta: '🇦🇺 Dólar australiano (A$)', valor: 'AUD' },
+  { etiqueta: '🇳🇿 Dólar neozelandés (NZ$)', valor: 'NZD' },
+  // África
+  { etiqueta: '🇿🇦 Rand sudafricano (R)', valor: 'ZAR' },
+  { etiqueta: '🇪🇬 Libra egipcia (£)', valor: 'EGP' },
+  // Cripto
+  { etiqueta: '₿ Bitcoin (BTC)', valor: 'BTC' },
+  { etiqueta: 'Ξ Ethereum (ETH)', valor: 'ETH' }
 ]
 
 const zonasHorarias = [
-  { etiqueta: 'Atlántico/Canarias', valor: 'Atlantic/Canary' },
-  { etiqueta: 'Europa/Madrid', valor: 'Europe/Madrid' },
-  { etiqueta: 'Europa/Londres', valor: 'Europe/London' },
-  { etiqueta: 'Europa/París', valor: 'Europe/Paris' },
-  { etiqueta: 'América/Nueva York', valor: 'America/New_York' },
-  { etiqueta: 'América/Los Ángeles', valor: 'America/Los_Angeles' }
+  // España
+  { etiqueta: '🇪🇸 Atlántico/Canarias (UTC+0/+1)', valor: 'Atlantic/Canary' },
+  { etiqueta: '🇪🇸 Europa/Madrid (UTC+1/+2)', valor: 'Europe/Madrid' },
+  // Europa
+  { etiqueta: '🇬🇧 Europa/Londres (UTC+0/+1)', valor: 'Europe/London' },
+  { etiqueta: '🇫🇷 Europa/París (UTC+1/+2)', valor: 'Europe/Paris' },
+  { etiqueta: '🇩🇪 Europa/Berlín (UTC+1/+2)', valor: 'Europe/Berlin' },
+  { etiqueta: '🇮🇹 Europa/Roma (UTC+1/+2)', valor: 'Europe/Rome' },
+  { etiqueta: '🇵🇹 Europa/Lisboa (UTC+0/+1)', valor: 'Europe/Lisbon' },
+  { etiqueta: '🇳🇱 Europa/Ámsterdam (UTC+1/+2)', valor: 'Europe/Amsterdam' },
+  { etiqueta: '🇧🇪 Europa/Bruselas (UTC+1/+2)', valor: 'Europe/Brussels' },
+  { etiqueta: '🇨🇭 Europa/Zúrich (UTC+1/+2)', valor: 'Europe/Zurich' },
+  { etiqueta: '🇸🇪 Europa/Estocolmo (UTC+1/+2)', valor: 'Europe/Stockholm' },
+  { etiqueta: '🇳🇴 Europa/Oslo (UTC+1/+2)', valor: 'Europe/Oslo' },
+  { etiqueta: '🇩🇰 Europa/Copenhague (UTC+1/+2)', valor: 'Europe/Copenhagen' },
+  { etiqueta: '🇫🇮 Europa/Helsinki (UTC+2/+3)', valor: 'Europe/Helsinki' },
+  { etiqueta: '🇵🇱 Europa/Varsovia (UTC+1/+2)', valor: 'Europe/Warsaw' },
+  { etiqueta: '🇷🇴 Europa/Bucarest (UTC+2/+3)', valor: 'Europe/Bucharest' },
+  { etiqueta: '🇬🇷 Europa/Atenas (UTC+2/+3)', valor: 'Europe/Athens' },
+  { etiqueta: '🇷🇺 Europa/Moscú (UTC+3)', valor: 'Europe/Moscow' },
+  // América
+  { etiqueta: '🇺🇸 América/Nueva York (UTC-5/-4)', valor: 'America/New_York' },
+  { etiqueta: '🇺🇸 América/Chicago (UTC-6/-5)', valor: 'America/Chicago' },
+  { etiqueta: '🇺🇸 América/Denver (UTC-7/-6)', valor: 'America/Denver' },
+  { etiqueta: '🇺🇸 América/Los Ángeles (UTC-8/-7)', valor: 'America/Los_Angeles' },
+  { etiqueta: '🇨🇦 América/Toronto (UTC-5/-4)', valor: 'America/Toronto' },
+  { etiqueta: '🇲🇽 América/Ciudad de México (UTC-6/-5)', valor: 'America/Mexico_City' },
+  { etiqueta: '🇧🇷 América/São Paulo (UTC-3)', valor: 'America/Sao_Paulo' },
+  { etiqueta: '🇦🇷 América/Buenos Aires (UTC-3)', valor: 'America/Argentina/Buenos_Aires' },
+  { etiqueta: '🇨🇱 América/Santiago (UTC-4/-3)', valor: 'America/Santiago' },
+  { etiqueta: '🇨🇴 América/Bogotá (UTC-5)', valor: 'America/Bogota' },
+  { etiqueta: '🇵🇪 América/Lima (UTC-5)', valor: 'America/Lima' },
+  // Asia
+  { etiqueta: '🇯🇵 Asia/Tokio (UTC+9)', valor: 'Asia/Tokyo' },
+  { etiqueta: '🇨🇳 Asia/Shanghái (UTC+8)', valor: 'Asia/Shanghai' },
+  { etiqueta: '🇰🇷 Asia/Seúl (UTC+9)', valor: 'Asia/Seoul' },
+  { etiqueta: '🇮🇳 Asia/Calcuta (UTC+5:30)', valor: 'Asia/Calcutta' },
+  { etiqueta: '🇸🇬 Asia/Singapur (UTC+8)', valor: 'Asia/Singapore' },
+  { etiqueta: '🇦🇪 Asia/Dubái (UTC+4)', valor: 'Asia/Dubai' },
+  { etiqueta: '🇹🇷 Europa/Estambul (UTC+3)', valor: 'Europe/Istanbul' },
+  // Oceanía
+  { etiqueta: '🇦🇺 Australia/Sídney (UTC+10/+11)', valor: 'Australia/Sydney' },
+  { etiqueta: '🇦🇺 Australia/Melbourne (UTC+10/+11)', valor: 'Australia/Melbourne' },
+  { etiqueta: '🇳🇿 Pacífico/Auckland (UTC+12/+13)', valor: 'Pacific/Auckland' },
+  // África
+  { etiqueta: '🇿🇦 África/Johannesburgo (UTC+2)', valor: 'Africa/Johannesburg' },
+  { etiqueta: '🇪🇬 África/El Cairo (UTC+2)', valor: 'Africa/Cairo' },
+  { etiqueta: '🇳🇬 África/Lagos (UTC+1)', valor: 'Africa/Lagos' }
 ]
 
 const inicialUsuario = computed(() => {
