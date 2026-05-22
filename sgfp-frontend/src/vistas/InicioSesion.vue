@@ -14,16 +14,17 @@
 
     <!-- Tarjeta glass -->
     <div class="glass w-full max-w-md p-8 relative z-10">
-    <!-- Logo -->
-    <div class="flex flex-col items-center mb-8">
-      <img
-        src="/logo.png"
-        alt="SGFP Logo"
-        class="w-60 h-70 rounded-2xl object-cover mb-3"
-      />
-      <h1 class="text-3xl font-bold texto-glass">SGFP</h1>
-      <p class="texto-glass-suave text-sm mt-1 text-center">Sistema de Gestión de Finanzas Personales</p>
-    </div>
+      <!-- Logo -->
+      <div class="flex flex-col items-center mb-8">
+        <img
+          src="/logo.png"
+          alt="SGFP Logo"
+          class="w-20 h-20 rounded-2xl object-cover mb-3"
+          style="box-shadow: 0 8px 32px rgba(124,58,237,0.3)"
+        />
+        <h1 class="text-3xl font-bold texto-glass">SGFP</h1>
+        <p class="texto-glass-suave text-sm mt-1 text-center">Sistema de Gestión de Finanzas Personales</p>
+      </div>
 
       <!-- Formulario -->
       <form @submit.prevent="enviarFormulario" class="flex flex-col gap-5">
@@ -37,7 +38,7 @@
               type="email"
               placeholder="tu@email.com"
               class="w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.email ? 'border-red-400' : 'focus:border-purple-400'"
             />
           </div>
@@ -54,7 +55,7 @@
               :type="mostrarContrasena ? 'text' : 'password'"
               placeholder="Tu contraseña"
               class="w-full pl-10 pr-10 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.contrasena ? 'border-red-400' : 'focus:border-purple-400'"
             />
             <button
