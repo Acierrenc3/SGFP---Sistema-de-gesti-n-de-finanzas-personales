@@ -86,6 +86,97 @@
         </div>
       </div>
 
+      <!-- Disponible diario -->
+<div
+  v-if="resumen?.disponible_diario"
+  class="glass p-6 animar-entrada mb-6"
+>
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="texto-glass font-semibold">Disponible diario</h3>
+    <div
+      class="flex items-center gap-2 px-3 py-1 rounded-xl text-xs"
+      style="background: rgba(124,58,237,0.15); color: #a78bfa"
+    >
+      <i class="pi pi-calendar" />
+      {{ resumen.disponible_diario.dias_restantes }} días restantes
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Disponible diario -->
+    <div class="glass p-4 text-center">
+      <p class="texto-glass-suave text-xs mb-1">Disponible hoy</p>
+      <p
+        class="text-2xl font-bold"
+        :class="resumen.disponible_diario.disponible_diario > 0 ? 'text-green-400' : 'text-red-400'"
+      >
+        {{ formatearMoneda(resumen.disponible_diario.disponible_diario) }}
+      </p>
+      <p class="texto-glass-suave text-xs mt-1">por día</p>
+    </div>
+
+    <!-- Presupuesto total -->
+    <div class="glass p-4 text-center">
+      <p class="texto-glass-suave text-xs mb-1">Presupuesto total</p>
+      <p class="text-lg font-bold texto-glass">
+        {{ formatearMoneda(resumen.disponible_diario.presupuesto_total) }}
+      </p>
+      <p class="texto-glass-suave text-xs mt-1">este mes</p>
+    </div>
+
+    <!-- Gastado -->
+    <div class="glass p-4 text-center">
+      <p class="texto-glass-suave text-xs mb-1">Gastado</p>
+      <p class="text-lg font-bold text-red-400">
+        {{ formatearMoneda(resumen.disponible_diario.gasto_total) }}
+      </p>
+      <p class="texto-glass-suave text-xs mt-1">hasta hoy</p>
+    </div>
+
+    <!-- Restante -->
+    <div class="glass p-4 text-center">
+      <p class="texto-glass-suave text-xs mb-1">Restante</p>
+      <p
+        class="text-lg font-bold"
+        :class="resumen.disponible_diario.presupuesto_restante > 0 ? 'text-purple-400' : 'text-red-400'"
+      >
+        {{ formatearMoneda(resumen.disponible_diario.presupuesto_restante) }}
+      </p>
+      <p class="texto-glass-suave text-xs mt-1">del presupuesto</p>
+    </div>
+  </div>
+
+      <!-- Barra de progreso -->
+      <div class="mt-4">
+        <div class="flex justify-between mb-2">
+          <span class="texto-glass-suave text-xs">Presupuesto consumido</span>
+          <span
+            class="text-xs font-medium"
+            :style="(resumen.disponible_diario.gasto_total / resumen.disponible_diario.presupuesto_total * 100) >= 100
+              ? 'color: #f87171'
+              : (resumen.disponible_diario.gasto_total / resumen.disponible_diario.presupuesto_total * 100) >= 80
+              ? 'color: #fbbf24'
+              : 'color: rgba(255,255,255,0.5)'"
+          >
+            {{ ((resumen.disponible_diario.gasto_total / resumen.disponible_diario.presupuesto_total) * 100).toFixed(1) }}%
+          </span>
+        </div>
+        <div class="w-full h-2 rounded-full" style="background: rgba(255,255,255,0.1)">
+          <div
+            class="h-2 rounded-full animar-progreso"
+            :style="{
+              width: `${Math.min((resumen.disponible_diario.gasto_total / resumen.disponible_diario.presupuesto_total) * 100, 100)}%`,
+              background: (resumen.disponible_diario.gasto_total / resumen.disponible_diario.presupuesto_total * 100) >= 100
+                ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                : (resumen.disponible_diario.gasto_total / resumen.disponible_diario.presupuesto_total * 100) >= 80
+                ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
+            }"
+          />
+        </div>
+      </div>
+    </div>
+
       <!-- Gráficos -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div class="glass p-6 animar-entrada">
