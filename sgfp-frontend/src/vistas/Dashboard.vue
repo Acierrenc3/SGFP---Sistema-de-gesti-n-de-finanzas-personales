@@ -209,6 +209,31 @@
           </div>
         </div>
       </div>
+        <!-- Evolución diaria del saldo -->
+      <div class="glass p-6 animar-entrada mb-6" v-if="evolucionDiaria.length">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="texto-glass font-semibold">Evolución diaria del saldo</h3>
+          <div class="flex items-center gap-3">
+            <span class="texto-glass-suave text-xs">
+              Inicio: {{ formatearMoneda(evolucionDiaria[0]?.saldo) }}
+            </span>
+            <span
+              class="text-xs font-medium"
+              :class="evolucionDiaria[evolucionDiaria.length - 1]?.saldo >= evolucionDiaria[0]?.saldo
+                ? 'text-green-400'
+                : 'text-red-400'"
+            >
+              Actual: {{ formatearMoneda(evolucionDiaria[evolucionDiaria.length - 1]?.saldo) }}
+            </span>
+          </div>
+        </div>
+        <Chart
+          type="line"
+          :data="datosEvolucionDiaria"
+          :options="opcionesLineaDiaria"
+          class="h-64"
+        />
+      </div>
 
       <!-- Presupuestos -->
       <div class="glass p-6 animar-entrada mb-6" v-if="resumen?.resumen_presupuestos?.length">
@@ -321,6 +346,7 @@ const categorias = ref([])
 const ahora = new Date()
 const mesSeleccionado = ref(ahora.getMonth() + 1)
 const anioSeleccionado = ref(ahora.getFullYear())
+const evolucionDiaria = ref([])
 
 const meses = [
   { etiqueta: 'Enero', valor: 1 }, { etiqueta: 'Febrero', valor: 2 },
@@ -423,6 +449,7 @@ async function cargarDatos() {
   } finally {
     cargando.value = false
   }
+  await cargarEvolucionDiaria()
 }
 
 async function cargarTransaccionesRecientes() {
@@ -448,6 +475,69 @@ async function verificarRecurrentes() {
     await api.get('/recurrentes/')
   } catch {
     // Si falla no bloqueamos el dashboard
+  }
+}
+
+async function cargarEvolucionDiaria() {
+  try {
+    const respuesta = await api.get('/dashboard/evolucion-diaria', {
+      params: { mes: mesSeleccionado.value, anio: anioSeleccionado.value }
+    })
+    evolucionDiaria.value = respuesta.data
+  } catch {
+    // Si falla no bloqueamos el dashboard
+  }
+}
+
+const datosEvolucionDiaria = computed(() => {
+  if (!evolucionDiaria.value.length) return { labels: [], datasets: [] }
+  return {
+    labels: evolucionDiaria.value.map(p => {
+      const d = new Date(p.fecha)
+      return `${d.getDate()}/${d.getMonth() + 1}`
+    }),
+    datasets: [
+      {
+        label: 'Saldo',
+        data: evolucionDiaria.value.map(p => p.saldo),
+        borderColor: '#7c3aed',
+        backgroundColor: 'rgba(124,58,237,0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 3,
+        pointBackgroundColor: '#7c3aed'
+      }
+    ]
+  }
+})
+
+const opcionesLineaDiaria = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false
+    },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          return ` ${new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: 'EUR'
+          }).format(context.raw)}`
+        }
+      }
+    }
+  },
+  scales: {
+    x: {
+      ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } },
+      grid: { color: 'rgba(255,255,255,0.05)' }
+    },
+    y: {
+      ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } },
+      grid: { color: 'rgba(255,255,255,0.05)' }
+    }
   }
 }
 

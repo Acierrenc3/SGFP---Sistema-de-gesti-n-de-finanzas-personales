@@ -1,7 +1,7 @@
 # Endpoints del dashboard: datos agregados para el resumen financiero
 # Basado en: https://fastapi.tiangolo.com/tutorial/sql-databases/
 
-from datetime import datetime
+from datetime import datetime, date
 import calendar
 from typing import List, Optional
 
@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.endpoints.autenticacion import obtener_usuario_actual
 from app.db.sesion import obtener_sesion
 from app.modelos.categoria import Categoria
+from app.modelos.cuenta import Cuenta
 from app.modelos.presupuesto import Presupuesto
 from app.modelos.transaccion import Transaccion
 from app.modelos.usuario import Usuario
@@ -54,12 +55,18 @@ class ResumenPresupuesto(BaseModel):
 
 
 class DisponibleDiario(BaseModel):
-    """Disponible diario basado en presupuestos y gasto actual."""
     presupuesto_total: float
     gasto_total: float
     presupuesto_restante: float
     dias_restantes: int
     disponible_diario: float
+
+
+class PuntoEvolucionDiaria(BaseModel):
+    fecha: str
+    saldo: float
+    ingresos: float
+    gastos: float
 
 
 class ResumenDashboard(BaseModel):
@@ -221,7 +228,6 @@ def obtener_resumen_dashboard(
     # --- Disponible diario ---
     disponible_diario = None
     if presupuesto_total > 0:
-        # Calcula días restantes del mes consultado
         dias_en_mes = calendar.monthrange(anio_consulta, mes_consulta)[1]
         dia_actual = ahora.day if (
             mes_consulta == ahora.month and
@@ -247,3 +253,95 @@ def obtener_resumen_dashboard(
         resumen_presupuestos=resumen_presupuestos,
         disponible_diario=disponible_diario
     )
+
+
+@enrutador.get(
+    "/evolucion-diaria",
+    response_model=List[PuntoEvolucionDiaria],
+    summary="Obtener evolución diaria del saldo"
+)
+def obtener_evolucion_diaria(
+    mes: Optional[int] = Query(None, description="Mes a consultar (1-12)"),
+    anio: Optional[int] = Query(None, description="Año a consultar"),
+    sesion: Session = Depends(obtener_sesion),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual)
+):
+    """
+    Devuelve la evolución diaria del saldo durante el mes indicado.
+    Parte del saldo inicial de las cuentas y acumula ingresos/gastos día a día.
+    """
+    ahora = datetime.utcnow()
+    mes_consulta = mes or ahora.month
+    anio_consulta = anio or ahora.year
+
+    # Saldo inicial de todas las cuentas del usuario
+    saldo_inicial = sesion.query(
+        func.coalesce(func.sum(Cuenta.saldo_inicial), 0.0)
+    ).filter(
+        Cuenta.id_usuario == usuario_actual.id
+    ).scalar() or 0.0
+
+    # Transacciones anteriores al mes consultado
+    saldo_anterior = sesion.query(
+        func.coalesce(func.sum(
+            func.case(
+                (Transaccion.tipo == 'ingreso', Transaccion.importe),
+                else_=-Transaccion.importe
+            )
+        ), 0.0)
+    ).filter(
+        Transaccion.id_usuario == usuario_actual.id,
+        Transaccion.fecha < datetime(anio_consulta, mes_consulta, 1)
+    ).scalar() or 0.0
+
+    saldo_base = saldo_inicial + saldo_anterior
+
+    # Transacciones del mes agrupadas por día
+    transacciones_mes = sesion.query(
+        func.date(Transaccion.fecha).label('dia'),
+        Transaccion.tipo,
+        func.sum(Transaccion.importe).label('total')
+    ).filter(
+        Transaccion.id_usuario == usuario_actual.id,
+        func.extract('month', Transaccion.fecha) == mes_consulta,
+        func.extract('year', Transaccion.fecha) == anio_consulta
+    ).group_by(
+        func.date(Transaccion.fecha),
+        Transaccion.tipo
+    ).order_by(
+        func.date(Transaccion.fecha)
+    ).all()
+
+    # Construye diccionario por día
+    dias_dict = {}
+    for fila in transacciones_mes:
+        dia_str = str(fila.dia)
+        if dia_str not in dias_dict:
+            dias_dict[dia_str] = {'ingresos': 0.0, 'gastos': 0.0}
+        if fila.tipo == 'ingreso':
+            dias_dict[dia_str]['ingresos'] = float(fila.total)
+        else:
+            dias_dict[dia_str]['gastos'] = float(fila.total)
+
+    # Genera serie diaria
+    dias_en_mes = calendar.monthrange(anio_consulta, mes_consulta)[1]
+    dia_actual = ahora.day if (
+        mes_consulta == ahora.month and
+        anio_consulta == ahora.year
+    ) else dias_en_mes
+
+    saldo_acumulado = saldo_base
+    serie = []
+
+    for dia in range(1, dia_actual + 1):
+        fecha_str = date(anio_consulta, mes_consulta, dia).isoformat()
+        movimientos = dias_dict.get(fecha_str, {'ingresos': 0.0, 'gastos': 0.0})
+        saldo_acumulado += movimientos['ingresos'] - movimientos['gastos']
+        serie.append(PuntoEvolucionDiaria(
+            fecha=fecha_str,
+            saldo=round(saldo_acumulado, 2),
+            ingresos=movimientos['ingresos'],
+            gastos=movimientos['gastos']
+        ))
+
+    return serie
