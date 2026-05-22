@@ -99,7 +99,7 @@
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
         @click.self="dialogoVisible = false"
       >
-        <div class="glass w-full max-w-md p-6 animar-dialogo">
+        <div class="glass w-full max-w-lg p-6 animar-dialogo overflow-y-auto max-h-screen">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold texto-glass">
               {{ categoriaEditando ? 'Editar categoría' : 'Nueva categoría' }}
@@ -114,6 +114,7 @@
           </div>
 
           <form @submit.prevent="guardarCategoria" class="flex flex-col gap-4">
+            <!-- Nombre -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Nombre</label>
               <input
@@ -127,6 +128,7 @@
               <small class="text-red-400" v-if="errores.nombre">{{ errores.nombre }}</small>
             </div>
 
+            <!-- Tipo -->
             <div class="flex flex-col gap-2">
               <label class="texto-glass text-sm font-medium">Tipo</label>
               <div class="flex gap-2">
@@ -147,31 +149,88 @@
               </div>
             </div>
 
+            <!-- Selector visual de iconos -->
             <div class="flex flex-col gap-2">
-              <label class="texto-glass text-sm font-medium">Icono (opcional)</label>
-              <input
-                v-model="formulario.icono"
-                type="text"
-                placeholder="Ej: pi-shopping-cart"
-                class="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
-              />
-              <small class="texto-glass-suave text-xs">Usa nombres de PrimeIcons sin el prefijo 'pi'</small>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label class="texto-glass text-sm font-medium">Color (opcional)</label>
-              <div class="flex items-center gap-3">
-                <input
-                  v-model="formulario.color"
-                  type="color"
-                  class="w-10 h-10 rounded-xl cursor-pointer border-0 outline-none"
-                  style="background: rgba(255,255,255,0.08)"
-                />
-                <span class="texto-glass-suave text-sm">{{ formulario.color || 'Sin color' }}</span>
+              <label class="texto-glass text-sm font-medium">Icono</label>
+              <div class="grid grid-cols-6 gap-2">
+                <button
+                  type="button"
+                  v-for="icono in iconosDisponibles"
+                  :key="icono.valor"
+                  @click="formulario.icono = icono.valor"
+                  class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all"
+                  :style="formulario.icono === icono.valor
+                    ? `background: ${formulario.color || '#7c3aed'}30; border: 1px solid ${formulario.color || '#7c3aed'}60`
+                    : 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1)'"
+                  :title="icono.etiqueta"
+                >
+                  <i
+                    :class="`pi ${icono.valor} text-lg`"
+                    :style="formulario.icono === icono.valor
+                      ? `color: ${formulario.color || '#7c3aed'}`
+                      : 'color: rgba(255,255,255,0.5)'"
+                  />
+                  <span class="text-xs texto-glass-suave truncate w-full text-center" style="font-size: 9px">
+                    {{ icono.etiqueta }}
+                  </span>
+                </button>
               </div>
             </div>
 
+            <!-- Color -->
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Color</label>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  v-for="color in coloresDisponibles"
+                  :key="color"
+                  @click="formulario.color = color"
+                  class="w-8 h-8 rounded-xl transition-all hover:scale-110"
+                  :style="`background: ${color}; ${formulario.color === color ? 'outline: 2px solid white; outline-offset: 2px' : ''}`"
+                />
+                <!-- Color personalizado -->
+                <div class="relative">
+                  <input
+                    v-model="formulario.color"
+                    type="color"
+                    class="w-8 h-8 rounded-xl cursor-pointer border-0 outline-none opacity-0 absolute inset-0"
+                  />
+                  <div
+                    class="w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer"
+                    style="background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3)"
+                  >
+                    <i class="pi pi-palette text-xs texto-glass-suave" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="flex items-center gap-3 p-3 rounded-xl" style="background: rgba(255,255,255,0.05)">
+              <div
+                class="w-10 h-10 rounded-xl flex items-center justify-center"
+                :style="`background: ${formulario.color}25; border: 1px solid ${formulario.color}50`"
+              >
+                <i
+                  :class="`pi ${formulario.icono || 'pi-tag'} text-lg`"
+                  :style="`color: ${formulario.color}`"
+                />
+              </div>
+              <div>
+                <p class="texto-glass text-sm font-medium">{{ formulario.nombre || 'Nombre de la categoría' }}</p>
+                <span
+                  class="text-xs px-2 py-0.5 rounded-lg"
+                  :style="formulario.tipo === 'ingreso'
+                    ? 'background: rgba(74,222,128,0.15); color: #4ade80'
+                    : 'background: rgba(248,113,113,0.15); color: #f87171'"
+                >
+                  {{ formulario.tipo === 'ingreso' ? 'Ingreso' : 'Gasto' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Botones -->
             <div class="flex gap-3 mt-2">
               <button
                 type="button"
@@ -252,10 +311,43 @@ const tiposCategoria = [
   { etiqueta: 'Gasto', valor: 'gasto' }
 ]
 
+const iconosDisponibles = [
+  { valor: 'pi-shopping-cart', etiqueta: 'Compras' },
+  { valor: 'pi-car', etiqueta: 'Transporte' },
+  { valor: 'pi-home', etiqueta: 'Hogar' },
+  { valor: 'pi-heart', etiqueta: 'Salud' },
+  { valor: 'pi-star', etiqueta: 'Ocio' },
+  { valor: 'pi-book', etiqueta: 'Educación' },
+  { valor: 'pi-tag', etiqueta: 'General' },
+  { valor: 'pi-briefcase', etiqueta: 'Trabajo' },
+  { valor: 'pi-globe', etiqueta: 'Restaurantes' },
+  { valor: 'pi-sync', etiqueta: 'Suscripciones' },
+  { valor: 'pi-desktop', etiqueta: 'Tecnología' },
+  { valor: 'pi-chart-line', etiqueta: 'Inversiones' },
+  { valor: 'pi-credit-card', etiqueta: 'Tarjeta' },
+  { valor: 'pi-gift', etiqueta: 'Regalos' },
+  { valor: 'pi-plane', etiqueta: 'Viajes' },
+  { valor: 'pi-user', etiqueta: 'Personal' },
+  { valor: 'pi-phone', etiqueta: 'Teléfono' },
+  { valor: 'pi-wifi', etiqueta: 'Internet' },
+  { valor: 'pi-bolt', etiqueta: 'Electricidad' },
+  { valor: 'pi-drop', etiqueta: 'Agua' },
+  { valor: 'pi-sun', etiqueta: 'Gas' },
+  { valor: 'pi-shield', etiqueta: 'Seguros' },
+  { valor: 'pi-wallet', etiqueta: 'Efectivo' },
+  { valor: 'pi-plus-circle', etiqueta: 'Otros' }
+]
+
+const coloresDisponibles = [
+  '#7c3aed', '#00b4d8', '#10b981', '#f59e0b',
+  '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4',
+  '#f97316', '#6366f1', '#14b8a6', '#84cc16'
+]
+
 const formulario = ref({
   nombre: '',
   tipo: 'gasto',
-  icono: '',
+  icono: 'pi-tag',
   color: '#7c3aed'
 })
 
@@ -278,11 +370,11 @@ function abrirDialogo(categoria = null) {
     formulario.value = {
       nombre: categoria.nombre,
       tipo: categoria.tipo,
-      icono: categoria.icono || '',
+      icono: categoria.icono || 'pi-tag',
       color: categoria.color || '#7c3aed'
     }
   } else {
-    formulario.value = { nombre: '', tipo: 'gasto', icono: '', color: '#7c3aed' }
+    formulario.value = { nombre: '', tipo: 'gasto', icono: 'pi-tag', color: '#7c3aed' }
   }
   dialogoVisible.value = true
 }
