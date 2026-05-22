@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.autenticacion import obtener_usuario_actual
@@ -284,7 +284,7 @@ def obtener_evolucion_diaria(
     # Transacciones anteriores al mes consultado
     saldo_anterior = sesion.query(
         func.coalesce(func.sum(
-            func.case(
+            case(
                 (Transaccion.tipo == 'ingreso', Transaccion.importe),
                 else_=-Transaccion.importe
             )
