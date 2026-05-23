@@ -2,6 +2,7 @@
 
 <template>
   <div class="min-h-screen flex items-center justify-center p-4" style="background: var(--gradiente-fondo)">
+    <!-- Círculos decorativos de fondo -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-20"
         style="background: radial-gradient(circle, #e040fb, transparent)" />
@@ -11,7 +12,10 @@
         style="background: radial-gradient(circle, #7c3aed, transparent)" />
     </div>
 
+    <!-- Tarjeta glass -->
     <div class="glass w-full max-w-md p-8 relative z-10">
+
+      <!-- Logo -->
       <div class="flex flex-col items-center mb-8">
         <img
           src="/logo.png"
@@ -23,8 +27,10 @@
         <p class="texto-glass-suave text-sm mt-1 text-center">Sistema de Gestión de Finanzas Personales</p>
       </div>
 
+      <!-- Formulario de inicio de sesión -->
       <form @submit.prevent="enviarFormulario" class="flex flex-col gap-5">
-        <!-- Email -->
+
+        <!-- Campo email -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Email</label>
           <div class="relative">
@@ -41,7 +47,7 @@
           <small class="text-red-400" v-if="errores.email">{{ errores.email }}</small>
         </div>
 
-        <!-- Contraseña -->
+        <!-- Campo contraseña -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Contraseña</label>
           <div class="relative">
@@ -54,6 +60,7 @@
               style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.contrasena ? 'border-red-400' : 'focus:border-purple-400'"
             />
+            <!-- Botón mostrar/ocultar contraseña -->
             <button
               type="button"
               class="absolute right-3 top-1/2 -translate-y-1/2 texto-glass-suave hover:text-white transition-colors"
@@ -65,7 +72,7 @@
           <small class="text-red-400" v-if="errores.contrasena">{{ errores.contrasena }}</small>
         </div>
 
-        <!-- Error general -->
+        <!-- Error general del servidor -->
         <div
           v-if="errorGeneral"
           class="flex items-center gap-2 px-4 py-3 rounded-xl text-red-300 text-sm"
@@ -75,7 +82,7 @@
           {{ errorGeneral }}
         </div>
 
-        <!-- Botón -->
+        <!-- Botón de envío -->
         <button
           type="submit"
           :disabled="cargando"
@@ -85,8 +92,10 @@
           <span v-if="!cargando">Iniciar sesión</span>
           <i v-else class="pi pi-spin pi-spinner" />
         </button>
+
       </form>
 
+      <!-- Enlace a registro -->
       <p class="text-center mt-6 texto-glass-suave text-sm">
         ¿No tienes cuenta?
         <RouterLink to="/registro" class="text-purple-400 hover:text-purple-300 font-medium ml-1 transition-colors">
@@ -98,6 +107,7 @@
 </template>
 
 <script setup>
+// Importaciones necesarias
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -108,16 +118,19 @@ const enrutador = useRouter()
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
 
+// Estado del formulario
 const formulario = ref({ email: '', contrasena: '' })
 const errores = ref({})
 const errorGeneral = ref('')
 const cargando = ref(false)
 const mostrarContrasena = ref(false)
 
+// ─── Validación del formulario ───────────────────────────────────────────────
+
 function validar() {
   errores.value = {}
 
-  // Validar email con formato correcto
+  // Validar formato de email
   const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!formulario.value.email) {
     errores.value.email = 'El email es obligatorio'
@@ -125,7 +138,8 @@ function validar() {
     errores.value.email = 'Introduce un email válido'
   }
 
-  // En login solo verificamos que no esté vacía
+  // En login solo verificamos que la contraseña no esté vacía
+  // Los requisitos de complejidad solo aplican en el registro
   if (!formulario.value.contrasena) {
     errores.value.contrasena = 'La contraseña es obligatoria'
   }
@@ -133,30 +147,16 @@ function validar() {
   return Object.keys(errores.value).length === 0
 }
 
-const contrasena = formulario.value.contrasena
-if (!contrasena) {
-  errores.value.contrasena = 'La contraseña es obligatoria'
-} else if (contrasena.length < 6) {
-  errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
-} else if (!/[a-z]/.test(contrasena)) {
-  errores.value.contrasena = 'La contraseña debe contener al menos una letra minúscula'
-} else if (!/[A-Z]/.test(contrasena)) {
-  errores.value.contrasena = 'La contraseña debe contener al menos una letra mayúscula'
-} else if (!/[0-9]/.test(contrasena)) {
-  errores.value.contrasena = 'La contraseña debe contener al menos un número'
-} else if (!/[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(contrasena)) {
-  errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
-}
-
-  return Object.keys(errores.value).length === 0
-}
+// ─── Envío del formulario ────────────────────────────────────────────────────
 
 async function enviarFormulario() {
+  // Detiene el envío si hay errores de validación
   if (!validar()) return
   cargando.value = true
   errorGeneral.value = ''
 
   try {
+    // Inicia sesión en el backend
     await autenticacion.iniciarSesion(formulario.value.email, formulario.value.contrasena)
     toast.add({
       severity: 'success',
