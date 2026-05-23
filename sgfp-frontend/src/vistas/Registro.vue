@@ -14,7 +14,8 @@
 
     <!-- Tarjeta glass -->
     <div class="glass w-full max-w-md p-8 relative z-10">
-      <!-- Logo -->
+
+      <!-- Logo e icono superior -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
           style="background: linear-gradient(135deg, #7c3aed, #00b4d8)">
@@ -24,10 +25,10 @@
         <p class="texto-glass-suave mt-1">Empieza a gestionar tus finanzas</p>
       </div>
 
-      <!-- Formulario -->
+      <!-- Formulario de registro -->
       <form @submit.prevent="enviarFormulario" class="flex flex-col gap-5">
 
-        <!-- Nombre -->
+        <!-- Campo nombre -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Nombre</label>
           <div class="relative">
@@ -44,7 +45,7 @@
           <small class="text-red-400" v-if="errores.nombre">{{ errores.nombre }}</small>
         </div>
 
-        <!-- Email -->
+        <!-- Campo email -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Email</label>
           <div class="relative">
@@ -61,7 +62,7 @@
           <small class="text-red-400" v-if="errores.email">{{ errores.email }}</small>
         </div>
 
-        <!-- Contraseña -->
+        <!-- Campo contraseña -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Contraseña</label>
           <div class="relative">
@@ -74,6 +75,7 @@
               style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.contrasena ? 'border-red-400' : 'focus:border-purple-400'"
             />
+            <!-- Botón mostrar/ocultar contraseña -->
             <button
               type="button"
               class="absolute right-3 top-1/2 -translate-y-1/2 texto-glass-suave hover:text-white transition-colors"
@@ -83,7 +85,7 @@
             </button>
           </div>
 
-          <!-- Indicador fortaleza -->
+          <!-- Indicador visual de fortaleza de contraseña -->
           <div v-if="formulario.contrasena" class="flex flex-col gap-1">
             <div class="flex gap-1">
               <div
@@ -100,8 +102,9 @@
             </p>
           </div>
 
-          <!-- Requisitos -->
+          <!-- Checklist de requisitos de contraseña en tiempo real -->
           <div class="flex flex-col gap-1 mt-1">
+            <!-- Requisito: longitud mínima -->
             <div class="flex items-center gap-2">
               <i
                 class="text-xs"
@@ -109,13 +112,31 @@
               />
               <span class="text-xs texto-glass-suave">Mínimo 6 caracteres</span>
             </div>
+            <!-- Requisito: letra mayúscula -->
             <div class="flex items-center gap-2">
               <i
                 class="text-xs"
-                :class="tieneLetraYNumero ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+                :class="tieneMayuscula ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
               />
-              <span class="text-xs texto-glass-suave">Al menos una letra y un número</span>
+              <span class="text-xs texto-glass-suave">Al menos una letra mayúscula</span>
             </div>
+            <!-- Requisito: letra minúscula -->
+            <div class="flex items-center gap-2">
+              <i
+                class="text-xs"
+                :class="tieneMinuscula ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+              />
+              <span class="text-xs texto-glass-suave">Al menos una letra minúscula</span>
+            </div>
+            <!-- Requisito: número -->
+            <div class="flex items-center gap-2">
+              <i
+                class="text-xs"
+                :class="tieneNumero ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+              />
+              <span class="text-xs texto-glass-suave">Al menos un número</span>
+            </div>
+            <!-- Requisito: carácter especial -->
             <div class="flex items-center gap-2">
               <i
                 class="text-xs"
@@ -128,7 +149,7 @@
           <small class="text-red-400" v-if="errores.contrasena">{{ errores.contrasena }}</small>
         </div>
 
-        <!-- Confirmar contraseña -->
+        <!-- Campo confirmar contraseña -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Confirmar contraseña</label>
           <div class="relative">
@@ -141,6 +162,7 @@
               style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.confirmarContrasena ? 'border-red-400' : 'focus:border-purple-400'"
             />
+            <!-- Botón mostrar/ocultar confirmación -->
             <button
               type="button"
               class="absolute right-3 top-1/2 -translate-y-1/2 texto-glass-suave hover:text-white transition-colors"
@@ -152,7 +174,7 @@
           <small class="text-red-400" v-if="errores.confirmarContrasena">{{ errores.confirmarContrasena }}</small>
         </div>
 
-        <!-- Error general -->
+        <!-- Error general del servidor -->
         <div
           v-if="errorGeneral"
           class="flex items-center gap-2 px-4 py-3 rounded-xl text-red-300 text-sm"
@@ -162,7 +184,7 @@
           {{ errorGeneral }}
         </div>
 
-        <!-- Botón -->
+        <!-- Botón de envío -->
         <button
           type="submit"
           :disabled="cargando"
@@ -175,7 +197,7 @@
 
       </form>
 
-      <!-- Enlace login -->
+      <!-- Enlace a inicio de sesión -->
       <p class="text-center mt-6 texto-glass-suave text-sm">
         ¿Ya tienes cuenta?
         <RouterLink to="/inicio-sesion" class="text-purple-400 hover:text-purple-300 font-medium ml-1 transition-colors">
@@ -187,6 +209,7 @@
 </template>
 
 <script setup>
+// Importaciones necesarias
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -197,6 +220,7 @@ const enrutador = useRouter()
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
 
+// Estado del formulario
 const formulario = ref({ nombre: '', email: '', contrasena: '', confirmarContrasena: '' })
 const errores = ref({})
 const errorGeneral = ref('')
@@ -204,27 +228,35 @@ const cargando = ref(false)
 const mostrarContrasena = ref(false)
 const mostrarConfirmar = ref(false)
 
-const tieneLetraYNumero = computed(() => {
-  const c = formulario.value.contrasena
-  return /[a-zA-Z]/.test(c) && /[0-9]/.test(c)
-})
+// ─── Computed de validación de contraseña ───────────────────────────────────
 
-const tieneEspecial = computed(() => {
-  const c = formulario.value.contrasena
-  return /[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(c)
-})
+// Verifica que haya al menos una letra minúscula
+const tieneMinuscula = computed(() => /[a-z]/.test(formulario.value.contrasena))
 
+// Verifica que haya al menos una letra mayúscula
+const tieneMayuscula = computed(() => /[A-Z]/.test(formulario.value.contrasena))
+
+// Verifica que haya al menos un número
+const tieneNumero = computed(() => /[0-9]/.test(formulario.value.contrasena))
+
+// Verifica que haya al menos un carácter especial
+const tieneEspecial = computed(() => /[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(formulario.value.contrasena))
+
+// ─── Indicador de fortaleza ──────────────────────────────────────────────────
+
+// Calcula el nivel de fortaleza de 0 a 4 según los requisitos cumplidos
 const nivelFortaleza = computed(() => {
   const c = formulario.value.contrasena
   if (!c) return 0
   let nivel = 0
   if (c.length >= 6) nivel++
-  if (tieneLetraYNumero.value) nivel++
+  if (tieneMayuscula.value && tieneMinuscula.value && tieneNumero.value) nivel++
   if (tieneEspecial.value) nivel++
   if (c.length >= 10) nivel++
   return nivel
 })
 
+// Color de la barra de fortaleza según nivel
 const colorFortaleza = computed(() => {
   if (nivelFortaleza.value <= 1) return '#ef4444'
   if (nivelFortaleza.value === 2) return '#f59e0b'
@@ -232,6 +264,7 @@ const colorFortaleza = computed(() => {
   return '#7c3aed'
 })
 
+// Texto descriptivo del nivel de fortaleza
 const textoFortaleza = computed(() => {
   if (nivelFortaleza.value <= 1) return 'Contraseña débil'
   if (nivelFortaleza.value === 2) return 'Contraseña aceptable'
@@ -239,15 +272,19 @@ const textoFortaleza = computed(() => {
   return 'Contraseña muy fuerte'
 })
 
+// ─── Validación del formulario ───────────────────────────────────────────────
+
 function validar() {
   errores.value = {}
 
+  // Validar nombre
   if (!formulario.value.nombre.trim()) {
     errores.value.nombre = 'El nombre es obligatorio'
   } else if (formulario.value.nombre.trim().length < 2) {
     errores.value.nombre = 'El nombre debe tener al menos 2 caracteres'
   }
 
+  // Validar email con regex
   const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!formulario.value.email) {
     errores.value.email = 'El email es obligatorio'
@@ -255,17 +292,23 @@ function validar() {
     errores.value.email = 'Introduce un email válido'
   }
 
+  // Validar contraseña: longitud, mayúscula, minúscula, número y carácter especial
   const contrasena = formulario.value.contrasena
   if (!contrasena) {
     errores.value.contrasena = 'La contraseña es obligatoria'
   } else if (contrasena.length < 6) {
     errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
-  } else if (!tieneLetraYNumero.value) {
-    errores.value.contrasena = 'La contraseña debe contener al menos una letra y un número'
+  } else if (!tieneMinuscula.value) {
+    errores.value.contrasena = 'La contraseña debe contener al menos una letra minúscula'
+  } else if (!tieneMayuscula.value) {
+    errores.value.contrasena = 'La contraseña debe contener al menos una letra mayúscula'
+  } else if (!tieneNumero.value) {
+    errores.value.contrasena = 'La contraseña debe contener al menos un número'
   } else if (!tieneEspecial.value) {
     errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
   }
 
+  // Validar confirmación de contraseña
   if (!formulario.value.confirmarContrasena) {
     errores.value.confirmarContrasena = 'Confirma tu contraseña'
   } else if (formulario.value.contrasena !== formulario.value.confirmarContrasena) {
@@ -275,12 +318,16 @@ function validar() {
   return Object.keys(errores.value).length === 0
 }
 
+// ─── Envío del formulario ────────────────────────────────────────────────────
+
 async function enviarFormulario() {
+  // Detiene el envío si hay errores de validación
   if (!validar()) return
   cargando.value = true
   errorGeneral.value = ''
 
   try {
+    // Registra al usuario en el backend
     await autenticacion.registrar(formulario.value.nombre, formulario.value.email, formulario.value.contrasena)
     toast.add({ severity: 'success', summary: 'Cuenta creada', detail: 'Tu cuenta se ha creado correctamente', life: 3000 })
     enrutador.push({ name: 'InicioSesion' })

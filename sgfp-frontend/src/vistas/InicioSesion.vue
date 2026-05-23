@@ -124,18 +124,20 @@ function validar() {
     errores.value.email = 'Introduce un email válido'
   }
 
-  const contrasena = formulario.value.contrasena
-  if (!contrasena) {
-    errores.value.contrasena = 'La contraseña es obligatoria'
-  } else if (contrasena.length < 6) {
-    errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
-  } else if (!/[a-zA-Z]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos una letra'
-  } else if (!/[0-9]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos un número'
-  } else if (!/[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
-  }
+const contrasena = formulario.value.contrasena
+if (!contrasena) {
+  errores.value.contrasena = 'La contraseña es obligatoria'
+} else if (contrasena.length < 6) {
+  errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
+} else if (!/[a-z]/.test(contrasena)) {
+  errores.value.contrasena = 'La contraseña debe contener al menos una letra minúscula'
+} else if (!/[A-Z]/.test(contrasena)) {
+  errores.value.contrasena = 'La contraseña debe contener al menos una letra mayúscula'
+} else if (!/[0-9]/.test(contrasena)) {
+  errores.value.contrasena = 'La contraseña debe contener al menos un número'
+} else if (!/[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(contrasena)) {
+  errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
+}
 
   return Object.keys(errores.value).length === 0
 }
