@@ -26,6 +26,7 @@
 
       <!-- Formulario -->
       <form @submit.prevent="enviarFormulario" class="flex flex-col gap-5">
+
         <!-- Nombre -->
         <div class="flex flex-col gap-2">
           <label class="texto-glass text-sm font-medium">Nombre</label>
@@ -111,14 +112,14 @@
             <div class="flex items-center gap-2">
               <i
                 class="text-xs"
-                :class="/[a-zA-Z]/.test(formulario.contrasena) && /[0-9]/.test(formulario.contrasena) ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+                :class="tieneLetraYNumero ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
               />
               <span class="text-xs texto-glass-suave">Al menos una letra y un número</span>
             </div>
             <div class="flex items-center gap-2">
               <i
                 class="text-xs"
-                :class="/[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]/.test(formulario.contrasena) ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+                :class="tieneEspecial ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
               />
               <span class="text-xs texto-glass-suave">Al menos un carácter especial (!@#$...)</span>
             </div>
@@ -171,6 +172,7 @@
           <span v-if="!cargando">Crear cuenta</span>
           <i v-else class="pi pi-spin pi-spinner" />
         </button>
+
       </form>
 
       <!-- Enlace login -->
@@ -202,13 +204,23 @@ const cargando = ref(false)
 const mostrarContrasena = ref(false)
 const mostrarConfirmar = ref(false)
 
+const tieneLetraYNumero = computed(() => {
+  const c = formulario.value.contrasena
+  return /[a-zA-Z]/.test(c) && /[0-9]/.test(c)
+})
+
+const tieneEspecial = computed(() => {
+  const c = formulario.value.contrasena
+  return /[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(c)
+})
+
 const nivelFortaleza = computed(() => {
   const c = formulario.value.contrasena
   if (!c) return 0
   let nivel = 0
   if (c.length >= 6) nivel++
-  if (/[a-zA-Z]/.test(c) && /[0-9]/.test(c)) nivel++
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(c)) nivel++
+  if (tieneLetraYNumero.value) nivel++
+  if (tieneEspecial.value) nivel++
   if (c.length >= 10) nivel++
   return nivel
 })
@@ -248,11 +260,9 @@ function validar() {
     errores.value.contrasena = 'La contraseña es obligatoria'
   } else if (contrasena.length < 6) {
     errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
-  } else if (!/[a-zA-Z]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos una letra'
-  } else if (!/[0-9]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos un número'
-  } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(contrasena)) {
+  } else if (!tieneLetraYNumero.value) {
+    errores.value.contrasena = 'La contraseña debe contener al menos una letra y un número'
+  } else if (!tieneEspecial.value) {
     errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
   }
 
