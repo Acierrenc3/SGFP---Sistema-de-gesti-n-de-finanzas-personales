@@ -36,7 +36,7 @@
               type="text"
               placeholder="Tu nombre"
               class="w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.nombre ? 'border-red-400' : 'focus:border-purple-400'"
             />
           </div>
@@ -53,7 +53,7 @@
               type="email"
               placeholder="tu@email.com"
               class="w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.email ? 'border-red-400' : 'focus:border-purple-400'"
             />
           </div>
@@ -70,7 +70,7 @@
               :type="mostrarContrasena ? 'text' : 'password'"
               placeholder="Mínimo 6 caracteres"
               class="w-full pl-10 pr-10 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.contrasena ? 'border-red-400' : 'focus:border-purple-400'"
             />
             <button
@@ -81,6 +81,49 @@
               <i :class="mostrarContrasena ? 'pi pi-eye-slash' : 'pi pi-eye'" />
             </button>
           </div>
+
+          <!-- Indicador fortaleza -->
+          <div v-if="formulario.contrasena" class="flex flex-col gap-1">
+            <div class="flex gap-1">
+              <div
+                v-for="n in 4"
+                :key="n"
+                class="h-1 flex-1 rounded-full transition-all duration-300"
+                :style="n <= nivelFortaleza
+                  ? `background: ${colorFortaleza}`
+                  : 'background: rgba(255,255,255,0.1)'"
+              />
+            </div>
+            <p class="text-xs transition-all" :style="`color: ${colorFortaleza}`">
+              {{ textoFortaleza }}
+            </p>
+          </div>
+
+          <!-- Requisitos -->
+          <div class="flex flex-col gap-1 mt-1">
+            <div class="flex items-center gap-2">
+              <i
+                class="text-xs"
+                :class="formulario.contrasena.length >= 6 ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+              />
+              <span class="text-xs texto-glass-suave">Mínimo 6 caracteres</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i
+                class="text-xs"
+                :class="/[a-zA-Z]/.test(formulario.contrasena) && /[0-9]/.test(formulario.contrasena) ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+              />
+              <span class="text-xs texto-glass-suave">Al menos una letra y un número</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i
+                class="text-xs"
+                :class="/[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]/.test(formulario.contrasena) ? 'pi pi-check-circle text-green-400' : 'pi pi-circle texto-glass-suave'"
+              />
+              <span class="text-xs texto-glass-suave">Al menos un carácter especial (!@#$...)</span>
+            </div>
+          </div>
+
           <small class="text-red-400" v-if="errores.contrasena">{{ errores.contrasena }}</small>
         </div>
 
@@ -94,7 +137,7 @@
               :type="mostrarConfirmar ? 'text' : 'password'"
               placeholder="Repite tu contraseña"
               class="w-full pl-10 pr-10 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all"
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
               :class="errores.confirmarContrasena ? 'border-red-400' : 'focus:border-purple-400'"
             />
             <button
@@ -142,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { RouterLink } from 'vue-router'
@@ -159,20 +202,66 @@ const cargando = ref(false)
 const mostrarContrasena = ref(false)
 const mostrarConfirmar = ref(false)
 
+const nivelFortaleza = computed(() => {
+  const c = formulario.value.contrasena
+  if (!c) return 0
+  let nivel = 0
+  if (c.length >= 6) nivel++
+  if (/[a-zA-Z]/.test(c) && /[0-9]/.test(c)) nivel++
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(c)) nivel++
+  if (c.length >= 10) nivel++
+  return nivel
+})
+
+const colorFortaleza = computed(() => {
+  if (nivelFortaleza.value <= 1) return '#ef4444'
+  if (nivelFortaleza.value === 2) return '#f59e0b'
+  if (nivelFortaleza.value === 3) return '#10b981'
+  return '#7c3aed'
+})
+
+const textoFortaleza = computed(() => {
+  if (nivelFortaleza.value <= 1) return 'Contraseña débil'
+  if (nivelFortaleza.value === 2) return 'Contraseña aceptable'
+  if (nivelFortaleza.value === 3) return 'Contraseña fuerte'
+  return 'Contraseña muy fuerte'
+})
+
 function validar() {
   errores.value = {}
-  if (!formulario.value.nombre) errores.value.nombre = 'El nombre es obligatorio'
-  if (!formulario.value.email) errores.value.email = 'El email es obligatorio'
-  if (!formulario.value.contrasena) {
-    errores.value.contrasena = 'La contraseña es obligatoria'
-  } else if (formulario.value.contrasena.length < 6) {
-    errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
+
+  if (!formulario.value.nombre.trim()) {
+    errores.value.nombre = 'El nombre es obligatorio'
+  } else if (formulario.value.nombre.trim().length < 2) {
+    errores.value.nombre = 'El nombre debe tener al menos 2 caracteres'
   }
+
+  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!formulario.value.email) {
+    errores.value.email = 'El email es obligatorio'
+  } else if (!regexEmail.test(formulario.value.email)) {
+    errores.value.email = 'Introduce un email válido'
+  }
+
+  const contrasena = formulario.value.contrasena
+  if (!contrasena) {
+    errores.value.contrasena = 'La contraseña es obligatoria'
+  } else if (contrasena.length < 6) {
+    errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
+  } else if (!/[a-zA-Z]/.test(contrasena)) {
+    errores.value.contrasena = 'La contraseña debe contener al menos una letra'
+  } else if (!/[0-9]/.test(contrasena)) {
+    errores.value.contrasena = 'La contraseña debe contener al menos un número'
+  } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(contrasena)) {
+    errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
+  }
+
   if (!formulario.value.confirmarContrasena) {
     errores.value.confirmarContrasena = 'Confirma tu contraseña'
   } else if (formulario.value.contrasena !== formulario.value.confirmarContrasena) {
     errores.value.confirmarContrasena = 'Las contraseñas no coinciden'
   }
+
   return Object.keys(errores.value).length === 0
 }
 
