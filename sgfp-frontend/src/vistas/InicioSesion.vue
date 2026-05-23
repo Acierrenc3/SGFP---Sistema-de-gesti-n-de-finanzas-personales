@@ -2,7 +2,6 @@
 
 <template>
   <div class="min-h-screen flex items-center justify-center p-4" style="background: var(--gradiente-fondo)">
-    <!-- Círculos decorativos de fondo -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-20"
         style="background: radial-gradient(circle, #e040fb, transparent)" />
@@ -12,9 +11,7 @@
         style="background: radial-gradient(circle, #7c3aed, transparent)" />
     </div>
 
-    <!-- Tarjeta glass -->
     <div class="glass w-full max-w-md p-8 relative z-10">
-      <!-- Logo -->
       <div class="flex flex-col items-center mb-8">
         <img
           src="/logo.png"
@@ -26,7 +23,6 @@
         <p class="texto-glass-suave text-sm mt-1 text-center">Sistema de Gestión de Finanzas Personales</p>
       </div>
 
-      <!-- Formulario -->
       <form @submit.prevent="enviarFormulario" class="flex flex-col gap-5">
         <!-- Email -->
         <div class="flex flex-col gap-2">
@@ -91,7 +87,6 @@
         </button>
       </form>
 
-      <!-- Enlace registro -->
       <p class="text-center mt-6 texto-glass-suave text-sm">
         ¿No tienes cuenta?
         <RouterLink to="/registro" class="text-purple-400 hover:text-purple-300 font-medium ml-1 transition-colors">
@@ -121,8 +116,27 @@ const mostrarContrasena = ref(false)
 
 function validar() {
   errores.value = {}
-  if (!formulario.value.email) errores.value.email = 'El email es obligatorio'
-  if (!formulario.value.contrasena) errores.value.contrasena = 'La contraseña es obligatoria'
+
+  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!formulario.value.email) {
+    errores.value.email = 'El email es obligatorio'
+  } else if (!regexEmail.test(formulario.value.email)) {
+    errores.value.email = 'Introduce un email válido'
+  }
+
+  const contrasena = formulario.value.contrasena
+  if (!contrasena) {
+    errores.value.contrasena = 'La contraseña es obligatoria'
+  } else if (contrasena.length < 6) {
+    errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
+  } else if (!/[a-zA-Z]/.test(contrasena)) {
+    errores.value.contrasena = 'La contraseña debe contener al menos una letra'
+  } else if (!/[0-9]/.test(contrasena)) {
+    errores.value.contrasena = 'La contraseña debe contener al menos un número'
+  } else if (!/[!@#$%^&*()\-_=+[\]{};:,.<>?]/.test(contrasena)) {
+    errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
+  }
+
   return Object.keys(errores.value).length === 0
 }
 
@@ -145,33 +159,5 @@ async function enviarFormulario() {
   } finally {
     cargando.value = false
   }
-}
-
-function validar() {
-  errores.value = {}
-
-  // Validar email
-  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!formulario.value.email) {
-    errores.value.email = 'El email es obligatorio'
-  } else if (!regexEmail.test(formulario.value.email)) {
-    errores.value.email = 'Introduce un email válido'
-  }
-
-  // Validar contraseña
-  const contrasena = formulario.value.contrasena
-  if (!contrasena) {
-    errores.value.contrasena = 'La contraseña es obligatoria'
-  } else if (contrasena.length < 6) {
-    errores.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
-  } else if (!/[a-zA-Z]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos una letra'
-  } else if (!/[0-9]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos un número'
-  } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(contrasena)) {
-    errores.value.contrasena = 'La contraseña debe contener al menos un carácter especial (!@#$...)'
-  }
-
-  return Object.keys(errores.value).length === 0
 }
 </script>
