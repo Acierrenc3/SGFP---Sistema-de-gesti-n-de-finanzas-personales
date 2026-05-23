@@ -117,12 +117,21 @@ const mostrarContrasena = ref(false)
 function validar() {
   errores.value = {}
 
+  // Validar email con formato correcto
   const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!formulario.value.email) {
     errores.value.email = 'El email es obligatorio'
   } else if (!regexEmail.test(formulario.value.email)) {
     errores.value.email = 'Introduce un email válido'
   }
+
+  // En login solo verificamos que no esté vacía
+  if (!formulario.value.contrasena) {
+    errores.value.contrasena = 'La contraseña es obligatoria'
+  }
+
+  return Object.keys(errores.value).length === 0
+}
 
 const contrasena = formulario.value.contrasena
 if (!contrasena) {
