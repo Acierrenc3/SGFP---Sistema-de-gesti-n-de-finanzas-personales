@@ -32,7 +32,8 @@
                 <i :class="cantidadesOcultas ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
               </button>
             </div>
-            <p class="text-3xl font-bold texto-glass">{{ formatearOculto(patrimonioTotal) }}</p>
+            <p class="text-3xl font-bold texto-glass">{{ formatearOcultoTotal(patrimonioTotal) }}</p>
+            <p class="texto-glass-suave text-xs mt-1">en {{ autenticacion.usuario?.moneda || 'EUR' }} · valores aproximados para cuentas en otras monedas</p>
           </div>
           <div
             class="w-14 h-14 rounded-xl flex items-center justify-center"
@@ -69,11 +70,21 @@
         >
           <!-- Icono y acciones -->
           <div class="flex items-center justify-between mb-4">
-            <div
-              class="w-12 h-12 rounded-xl flex items-center justify-center"
-              style="background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3)); border: 1px solid rgba(255,255,255,0.1)"
-            >
-              <i :class="obtenerIconoTipo(cuenta.tipo)" class="text-xl text-white" />
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 rounded-xl flex items-center justify-center"
+                style="background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,180,216,0.3)); border: 1px solid rgba(255,255,255,0.1)"
+              >
+                <i :class="obtenerIconoTipo(cuenta.tipo)" class="text-xl text-white" />
+              </div>
+              <!-- Moneda de la cuenta si es distinta a la del perfil -->
+              <span
+                v-if="cuenta.moneda && cuenta.moneda !== (autenticacion.usuario?.moneda || 'EUR')"
+                class="px-2 py-0.5 rounded-lg text-xs font-medium"
+                style="background: rgba(124,58,237,0.2); color: rgba(167,139,250,1); border: 1px solid rgba(124,58,237,0.3)"
+              >
+                {{ cuenta.moneda }}
+              </span>
             </div>
             <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -104,20 +115,20 @@
               class="text-2xl font-bold"
               :class="cuenta.saldo_actual >= 0 ? 'texto-glass' : 'text-red-400'"
             >
-              {{ formatearOculto(cuenta.saldo_actual) }}
+              {{ formatearOculto(cuenta.saldo_actual, cuenta.moneda) }}
             </p>
             <div class="flex gap-4 mt-3">
               <div>
                 <p class="text-xs texto-glass-suave">Ingresos</p>
-                <p class="text-sm text-green-400 font-medium">+{{ formatearOculto(cuenta.total_ingresos) }}</p>
+                <p class="text-sm text-green-400 font-medium">+{{ formatearOculto(cuenta.total_ingresos, cuenta.moneda) }}</p>
               </div>
               <div>
                 <p class="text-xs texto-glass-suave">Gastos</p>
-                <p class="text-sm text-red-400 font-medium">-{{ formatearOculto(cuenta.total_gastos) }}</p>
+                <p class="text-sm text-red-400 font-medium">-{{ formatearOculto(cuenta.total_gastos, cuenta.moneda) }}</p>
               </div>
               <div>
                 <p class="text-xs texto-glass-suave">Inicial</p>
-                <p class="text-sm texto-glass font-medium">{{ formatearOculto(cuenta.saldo_inicial) }}</p>
+                <p class="text-sm texto-glass font-medium">{{ formatearOculto(cuenta.saldo_inicial, cuenta.moneda) }}</p>
               </div>
             </div>
           </div>
@@ -177,6 +188,23 @@
                 </button>
               </div>
               <small class="text-red-400" v-if="errores.tipo">{{ errores.tipo }}</small>
+            </div>
+
+            <!-- Moneda de la cuenta -->
+            <div class="flex flex-col gap-2">
+              <label class="texto-glass text-sm font-medium">Moneda</label>
+              <select
+                v-model="formulario.moneda"
+                class="w-full px-4 py-3 rounded-xl text-white outline-none cursor-pointer"
+                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15)"
+              >
+                <option v-for="moneda in monedas" :key="moneda.valor" :value="moneda.valor" class="bg-gray-900">
+                  {{ moneda.etiqueta }}
+                </option>
+              </select>
+              <small class="texto-glass-suave text-xs">
+                Puede ser distinta a la moneda de tu perfil
+              </small>
             </div>
 
             <div class="flex flex-col gap-2">
@@ -258,6 +286,7 @@ import { useToast } from 'primevue/usetoast'
 import LayoutPrincipal from '../componentes/LayoutPrincipal.vue'
 import { useAutenticacionStore } from '../stores/autenticacion'
 import api from '../servicios/api'
+import { monedas } from '../utils/constantes.js'
 
 const toast = useToast()
 const autenticacion = useAutenticacionStore()
@@ -282,6 +311,7 @@ const tiposCuenta = [
 const formulario = ref({
   nombre: '',
   tipo: 'bancaria',
+  moneda: autenticacion.usuario?.moneda || 'EUR',
   saldo_inicial: 0
 })
 
@@ -303,15 +333,27 @@ function obtenerIconoTipo(tipo) {
   return iconos[tipo] || 'pi pi-wallet'
 }
 
-function formatearMoneda(valor) {
+// Formatea un valor con la moneda específica de la cuenta
+function formatearMonedaCuenta(valor, moneda) {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: autenticacion.usuario?.moneda || 'EUR'
+    currency: moneda || autenticacion.usuario?.moneda || 'EUR'
   }).format(valor)
 }
 
-function formatearOculto(valor) {
-  return cantidadesOcultas.value ? '••••••' : formatearMoneda(valor)
+// Formatea ocultando si está activo el modo oculto, usando la moneda de la cuenta
+function formatearOculto(valor, moneda) {
+  return cantidadesOcultas.value ? '••••••' : formatearMonedaCuenta(valor, moneda)
+}
+
+// Formatea el patrimonio total en la moneda del perfil
+function formatearOcultoTotal(valor) {
+  return cantidadesOcultas.value
+    ? '••••••'
+    : new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: autenticacion.usuario?.moneda || 'EUR'
+      }).format(valor)
 }
 
 async function cargarSaldos() {
@@ -333,10 +375,16 @@ function abrirDialogo(cuenta = null) {
     formulario.value = {
       nombre: cuenta.nombre,
       tipo: cuenta.tipo,
+      moneda: cuenta.moneda || autenticacion.usuario?.moneda || 'EUR',
       saldo_inicial: cuenta.saldo_inicial
     }
   } else {
-    formulario.value = { nombre: '', tipo: 'bancaria', saldo_inicial: 0 }
+    formulario.value = {
+      nombre: '',
+      tipo: 'bancaria',
+      moneda: autenticacion.usuario?.moneda || 'EUR',
+      saldo_inicial: 0
+    }
   }
   dialogoVisible.value = true
 }

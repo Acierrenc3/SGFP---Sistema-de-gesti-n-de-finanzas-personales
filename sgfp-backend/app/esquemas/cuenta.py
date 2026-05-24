@@ -10,6 +10,7 @@ class CuentaBase(BaseModel):
     nombre: str
     tipo: str  # 'efectivo', 'bancaria', 'tarjeta', 'ahorro'
     saldo_inicial: float = 0.0
+    moneda: str = 'EUR'
 
 
 class CuentaCrear(CuentaBase):
@@ -28,6 +29,7 @@ class CuentaActualizar(BaseModel):
     nombre: Optional[str] = None
     tipo: Optional[str] = None
     saldo_inicial: Optional[float] = None
+    moneda: Optional[str] = None
 
 
 class CuentaRespuesta(CuentaBase):
@@ -39,5 +41,4 @@ class CuentaRespuesta(CuentaBase):
     id_usuario: int
 
     class Config:
-        # Permite que Pydantic lea los datos desde atributos ORM
         from_attributes = True

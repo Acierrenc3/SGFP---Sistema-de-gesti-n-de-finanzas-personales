@@ -28,6 +28,9 @@ class Cuenta(Base):
     # Saldo inicial de la cuenta en el momento de su creación
     saldo_inicial = Column(Float, nullable=False, default=0.0)
 
+    # Moneda de la cuenta (ej: EUR, USD, GBP). Por defecto EUR.
+    moneda = Column(String(10), nullable=False, server_default='EUR')
+
     # Clave foránea al usuario propietario
     id_usuario = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
 
