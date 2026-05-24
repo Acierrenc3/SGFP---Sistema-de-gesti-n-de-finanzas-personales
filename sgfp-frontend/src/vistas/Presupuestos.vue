@@ -9,14 +9,27 @@
           <h2 class="text-2xl font-bold texto-glass">Presupuestos</h2>
           <p class="texto-glass-suave text-sm mt-1">Gestiona tus límites de gasto mensuales</p>
         </div>
-        <button
-          @click="abrirDialogo()"
-          class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 active:scale-95"
-          style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
-        >
-          <i class="pi pi-plus" />
-          Nuevo presupuesto
-        </button>
+        <div class="flex gap-2">
+          <button
+            v-if="presupuestos.length > 0"
+            @click="copiarAlMesSiguiente"
+            :disabled="copiando"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15)"
+          >
+            <i v-if="!copiando" class="pi pi-copy" />
+            <i v-else class="pi pi-spin pi-spinner" />
+            Copiar al mes siguiente
+          </button>
+          <button
+            @click="abrirDialogo()"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 active:scale-95"
+            style="background: linear-gradient(135deg, #7c3aed, #00b4d8)"
+          >
+            <i class="pi pi-plus" />
+            Nuevo presupuesto
+          </button>
+        </div>
       </div>
 
       <!-- Filtros -->
@@ -121,6 +134,26 @@
                 : 'color: rgba(255,255,255,0.5)'"
             >
               {{ presupuesto.porcentaje_usado.toFixed(1) }}%
+            </p>
+          </div>
+
+          <!-- Proyección de gasto: solo visible en el mes actual -->
+          <div
+            v-if="esMesActual(presupuesto) && presupuesto.gasto_actual > 0"
+            class="mt-2 flex items-center gap-1.5"
+          >
+            <i class="pi pi-chart-line text-xs" style="color: rgba(255,255,255,0.35)" />
+            <p class="text-xs" style="color: rgba(255,255,255,0.45)">
+              A este ritmo:
+              <span
+                :style="calcularProyeccion(presupuesto) > presupuesto.importe_limite
+                  ? 'color: #f87171'
+                  : 'color: rgba(255,255,255,0.7)'"
+                class="font-medium"
+              >
+                {{ formatearMoneda(calcularProyeccion(presupuesto)) }}
+              </span>
+              este mes
             </p>
           </div>
 
@@ -416,6 +449,7 @@ const presupuestos = ref([])
 const categorias = ref([])
 const cargando = ref(false)
 const guardando = ref(false)
+const copiando = ref(false)
 const dialogoVisible = ref(false)
 const dialogoEliminarVisible = ref(false)
 const presupuestoEditando = ref(null)
@@ -427,6 +461,13 @@ const desgloseVisible = ref(false)
 const presupuestoDesglose = ref(null)
 const transaccionesDesglose = ref([])
 const cargandoDesglose = ref(false)
+
+// Fecha actual para proyecciones — se calcula una vez al montar
+const hoy = new Date()
+const mesActual = hoy.getMonth() + 1
+const anioActual = hoy.getFullYear()
+const diaActual = hoy.getDate()
+const diasDelMesActual = new Date(anioActual, mesActual, 0).getDate()
 
 const totalDesglose = computed(() => {
   return transaccionesDesglose.value.reduce((total, t) => total + t.importe, 0)
@@ -460,6 +501,19 @@ const formulario = ref({
 
 const filtros = ref({ mes: '', anio: '' })
 
+// Devuelve true si el presupuesto corresponde al mes y año actuales
+function esMesActual(presupuesto) {
+  return presupuesto.mes === mesActual && presupuesto.anio === anioActual
+}
+
+// Proyección lineal: (gasto_actual / días_transcurridos) × días_del_mes
+// Usa diaActual - 1 para no contar el día de hoy como completo hasta que termine
+function calcularProyeccion(presupuesto) {
+  const diasTranscurridos = Math.max(diaActual - 1, 1)
+  const gastoDiario = presupuesto.gasto_actual / diasTranscurridos
+  return Math.round(gastoDiario * diasDelMesActual * 100) / 100
+}
+
 function obtenerNombreMes(numero) {
   return meses.find(m => m.valor === numero)?.etiqueta || '-'
 }
@@ -475,13 +529,62 @@ function formatearFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-ES')
 }
 
+function obtenerMesAnioOrigen() {
+  if (filtros.value.mes && filtros.value.anio) {
+    return { mes: filtros.value.mes, anio: filtros.value.anio }
+  }
+  const primero = presupuestos.value[0]
+  return { mes: primero.mes, anio: primero.anio }
+}
+
+async function copiarAlMesSiguiente() {
+  copiando.value = true
+  try {
+    const { mes, anio } = obtenerMesAnioOrigen()
+    const respuesta = await api.post('/presupuestos/copiar-al-mes-siguiente/', null, {
+      params: { mes, anio }
+    })
+
+    const creados = respuesta.data.length
+    const mesDestino = mes === 12 ? 1 : mes + 1
+    const anioDestino = mes === 12 ? anio + 1 : anio
+    const nombreMesDestino = obtenerNombreMes(mesDestino)
+
+    if (creados === 0) {
+      toast.add({
+        severity: 'info',
+        summary: 'Sin cambios',
+        detail: `Todos los presupuestos de ${nombreMesDestino} ${anioDestino} ya existían`,
+        life: 4000
+      })
+    } else {
+      toast.add({
+        severity: 'success',
+        summary: 'Copiados',
+        detail: `${creados} presupuesto${creados > 1 ? 's' : ''} copiado${creados > 1 ? 's' : ''} a ${nombreMesDestino} ${anioDestino}`,
+        life: 4000
+      })
+    }
+
+    await cargarPresupuestos()
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: error.response?.data?.detail || 'No se pudieron copiar los presupuestos',
+      life: 3000
+    })
+  } finally {
+    copiando.value = false
+  }
+}
+
 async function cargarPresupuestos() {
   cargando.value = true
   try {
     const params = {}
     if (filtros.value.mes) params.mes = filtros.value.mes
     if (filtros.value.anio) params.anio = filtros.value.anio
-    // Endpoint dedicado: devuelve gasto_actual, porcentaje_usado y nombre_categoria en una sola llamada
     const respuesta = await api.get('/presupuestos/con-gastos/', { params })
     presupuestos.value = respuesta.data
   } catch {

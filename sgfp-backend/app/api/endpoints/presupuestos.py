@@ -95,6 +95,75 @@ def listar_presupuestos_con_gastos(
     return resultado
 
 
+@enrutador.post(
+    "/copiar-al-mes-siguiente/",
+    response_model=List[PresupuestoRespuesta],
+    status_code=status.HTTP_201_CREATED,
+    summary="Copiar presupuestos del mes indicado al mes siguiente"
+)
+def copiar_al_mes_siguiente(
+    mes: int = Query(..., description="Mes origen (1-12)"),
+    anio: int = Query(..., description="Año origen"),
+    sesion: Session = Depends(obtener_sesion),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual)
+):
+    """
+    Copia todos los presupuestos del mes/año indicado al mes siguiente.
+    Omite los que ya existan en el destino para evitar duplicados.
+    """
+    # Calcular mes y año destino
+    if mes == 12:
+        mes_destino = 1
+        anio_destino = anio + 1
+    else:
+        mes_destino = mes + 1
+        anio_destino = anio
+
+    # Presupuestos del mes origen
+    presupuestos_origen = sesion.query(Presupuesto).filter(
+        Presupuesto.id_usuario == usuario_actual.id,
+        Presupuesto.mes == mes,
+        Presupuesto.anio == anio
+    ).all()
+
+    if not presupuestos_origen:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay presupuestos en el mes indicado"
+        )
+
+    # IDs de categorías que ya tienen presupuesto en el mes destino
+    ids_existentes = {
+        p.id_categoria
+        for p in sesion.query(Presupuesto).filter(
+            Presupuesto.id_usuario == usuario_actual.id,
+            Presupuesto.mes == mes_destino,
+            Presupuesto.anio == anio_destino
+        ).all()
+    }
+
+    creados = []
+    for origen in presupuestos_origen:
+        if origen.id_categoria in ids_existentes:
+            continue
+
+        nuevo = Presupuesto(
+            importe_limite=origen.importe_limite,
+            mes=mes_destino,
+            anio=anio_destino,
+            id_categoria=origen.id_categoria,
+            id_usuario=usuario_actual.id
+        )
+        sesion.add(nuevo)
+        creados.append(nuevo)
+
+    sesion.commit()
+    for p in creados:
+        sesion.refresh(p)
+
+    return creados
+
+
 @enrutador.get(
     "/",
     response_model=List[PresupuestoRespuesta],
