@@ -499,7 +499,7 @@ const formulario = ref({
   importe_limite: ''
 })
 
-const filtros = ref({ mes: '', anio: '' })
+const filtros = ref({ mes: new Date().getMonth() + 1, anio: new Date().getFullYear() })
 
 // Devuelve true si el presupuesto corresponde al mes y año actuales
 function esMesActual(presupuesto) {
