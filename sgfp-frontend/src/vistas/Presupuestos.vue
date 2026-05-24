@@ -60,9 +60,33 @@
         </div>
       </div>
 
-      <!-- Grid de presupuestos -->
-      <div v-if="cargando" class="flex justify-center py-12">
-        <i class="pi pi-spin pi-spinner text-2xl texto-glass-suave" />
+      <!-- Skeleton loaders -->
+      <div v-if="cargando" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          v-for="n in 3"
+          :key="n"
+          class="glass p-5"
+          style="animation: pulso-skeleton 1.5s ease-in-out infinite"
+        >
+          <!-- Cabecera skeleton -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col gap-2">
+              <div class="h-3 w-24 rounded-full skeleton-bloque" />
+              <div class="h-2 w-16 rounded-full skeleton-bloque" />
+            </div>
+          </div>
+          <!-- Importe skeleton -->
+          <div class="h-7 w-28 rounded-full skeleton-bloque mb-4" />
+          <!-- Barra skeleton -->
+          <div class="h-1.5 w-full rounded-full skeleton-bloque mb-2" />
+          <!-- Texto skeleton -->
+          <div class="flex justify-between">
+            <div class="h-2 w-20 rounded-full skeleton-bloque" />
+            <div class="h-2 w-8 rounded-full skeleton-bloque" />
+          </div>
+          <!-- Botón skeleton -->
+          <div class="h-8 w-full rounded-xl skeleton-bloque mt-4" />
+        </div>
       </div>
 
       <div v-else-if="presupuestos.length === 0" class="glass flex flex-col items-center py-12 texto-glass-suave animar-entrada">
@@ -174,7 +198,7 @@
         v-if="dialogoVisible"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px)"
-        @click.self="dialogoVisible = false"
+        @click.self="intentarCerrarDialogo"
       >
         <div class="glass w-full max-w-md p-6 animar-dialogo">
           <div class="flex items-center justify-between mb-6">
@@ -182,7 +206,7 @@
               {{ presupuestoEditando ? 'Editar presupuesto' : 'Nuevo presupuesto' }}
             </h3>
             <button
-              @click="dialogoVisible = false"
+              @click="intentarCerrarDialogo"
               class="w-8 h-8 rounded-lg flex items-center justify-center texto-glass-suave hover:text-white transition-colors"
               style="background: rgba(255,255,255,0.08)"
             >
@@ -257,7 +281,7 @@
             <div class="flex gap-3 mt-2">
               <button
                 type="button"
-                @click="dialogoVisible = false"
+                @click="intentarCerrarDialogo"
                 class="flex-1 py-3 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
                 style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
               >
@@ -274,6 +298,38 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Diálogo confirmar descartar cambios -->
+      <div
+        v-if="dialogoDescartarVisible"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px)"
+      >
+        <div class="glass w-full max-w-sm p-6 text-center animar-dialogo">
+          <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+            style="background: rgba(245,158,11,0.15)">
+            <i class="pi pi-exclamation-triangle text-yellow-400 text-2xl" />
+          </div>
+          <h3 class="text-lg font-bold texto-glass mb-2">¿Descartar cambios?</h3>
+          <p class="texto-glass-suave text-sm mb-6">Tienes cambios sin guardar. Si cierras, se perderán.</p>
+          <div class="flex gap-3">
+            <button
+              @click="dialogoDescartarVisible = false"
+              class="flex-1 py-2 rounded-xl text-sm font-medium texto-glass-suave transition-all hover:text-white"
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1)"
+            >
+              Seguir editando
+            </button>
+            <button
+              @click="cerrarDialogoConfirmado"
+              class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+              style="background: linear-gradient(135deg, #f59e0b, #d97706)"
+            >
+              Descartar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -452,9 +508,13 @@ const guardando = ref(false)
 const copiando = ref(false)
 const dialogoVisible = ref(false)
 const dialogoEliminarVisible = ref(false)
+const dialogoDescartarVisible = ref(false)
 const presupuestoEditando = ref(null)
 const presupuestoEliminar = ref(null)
 const errores = ref({})
+
+// Snapshot del formulario al abrirlo — para detectar cambios sin guardar
+const formularioInicial = ref(null)
 
 // Desglose
 const desgloseVisible = ref(false)
@@ -476,6 +536,12 @@ const totalDesglose = computed(() => {
 const porcentajeDesglose = computed(() => {
   if (!presupuestoDesglose.value?.importe_limite) return 0
   return (totalDesglose.value / presupuestoDesglose.value.importe_limite) * 100
+})
+
+// Detecta si el formulario tiene cambios respecto al snapshot inicial
+const formularioModificado = computed(() => {
+  if (!formularioInicial.value) return false
+  return JSON.stringify(formulario.value) !== JSON.stringify(formularioInicial.value)
 })
 
 const meses = [
@@ -501,13 +567,10 @@ const formulario = ref({
 
 const filtros = ref({ mes: new Date().getMonth() + 1, anio: new Date().getFullYear() })
 
-// Devuelve true si el presupuesto corresponde al mes y año actuales
 function esMesActual(presupuesto) {
   return presupuesto.mes === mesActual && presupuesto.anio === anioActual
 }
 
-// Proyección lineal: (gasto_actual / días_transcurridos) × días_del_mes
-// Usa diaActual - 1 para no contar el día de hoy como completo hasta que termine
 function calcularProyeccion(presupuesto) {
   const diasTranscurridos = Math.max(diaActual - 1, 1)
   const gastoDiario = presupuesto.gasto_actual / diasTranscurridos
@@ -527,6 +590,22 @@ function formatearMoneda(valor) {
 
 function formatearFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-ES')
+}
+
+// Intenta cerrar el diálogo: si hay cambios sin guardar muestra confirmación
+function intentarCerrarDialogo() {
+  if (formularioModificado.value) {
+    dialogoDescartarVisible.value = true
+  } else {
+    dialogoVisible.value = false
+  }
+}
+
+// Cierra el diálogo descartando los cambios
+function cerrarDialogoConfirmado() {
+  dialogoDescartarVisible.value = false
+  dialogoVisible.value = false
+  formularioInicial.value = null
 }
 
 function obtenerMesAnioOrigen() {
@@ -640,6 +719,8 @@ function abrirDialogo(presupuesto = null) {
       importe_limite: ''
     }
   }
+  // Guarda snapshot tras asignar los valores iniciales
+  formularioInicial.value = JSON.parse(JSON.stringify(formulario.value))
   dialogoVisible.value = true
 }
 
@@ -667,6 +748,7 @@ async function guardarPresupuesto() {
       await api.post('/presupuestos/', datos)
       toast.add({ severity: 'success', summary: 'Creado', detail: 'Presupuesto creado correctamente', life: 3000 })
     }
+    formularioInicial.value = null
     dialogoVisible.value = false
     await cargarPresupuestos()
   } catch (error) {
@@ -696,3 +778,14 @@ onMounted(async () => {
   await Promise.all([cargarPresupuestos(), cargarCategorias()])
 })
 </script>
+
+<style scoped>
+.skeleton-bloque {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+@keyframes pulso-skeleton {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+</style>
