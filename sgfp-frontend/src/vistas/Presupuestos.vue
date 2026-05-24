@@ -99,10 +99,10 @@
             <div
               class="h-1.5 rounded-full animar-progreso"
               :style="{
-                width: `${Math.min(gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0, 100)}%`,
-                background: (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 100
+                width: `${Math.min(obtenerGasto(presupuesto).porcentaje_usado, 100)}%`,
+                background: obtenerGasto(presupuesto).porcentaje_usado >= 100
                   ? 'linear-gradient(90deg, #ef4444, #dc2626)'
-                  : (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 80
+                  : obtenerGasto(presupuesto).porcentaje_usado >= 80
                   ? 'linear-gradient(90deg, #f59e0b, #d97706)'
                   : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
               }"
@@ -110,17 +110,17 @@
           </div>
           <div class="flex justify-between mt-1">
             <p class="texto-glass-suave text-xs">
-              {{ formatearMoneda(gastosReales[presupuesto.id_categoria]?.gasto_actual || 0) }} gastado
+              {{ formatearMoneda(obtenerGasto(presupuesto).gasto_actual) }} gastado
             </p>
             <p
               class="text-xs font-medium"
-              :style="(gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 100
+              :style="obtenerGasto(presupuesto).porcentaje_usado >= 100
                 ? 'color: #f87171'
-                : (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0) >= 80
+                : obtenerGasto(presupuesto).porcentaje_usado >= 80
                 ? 'color: #fbbf24'
                 : 'color: rgba(255,255,255,0.5)'"
             >
-              {{ (gastosReales[presupuesto.id_categoria]?.porcentaje_usado || 0).toFixed(1) }}%
+              {{ obtenerGasto(presupuesto).porcentaje_usado.toFixed(1) }}%
             </p>
           </div>
 
@@ -461,6 +461,12 @@ const formulario = ref({
 
 const filtros = ref({ mes: '', anio: '' })
 
+// Devuelve el gasto real del presupuesto usando clave única id_categoria-mes-anio
+function obtenerGasto(presupuesto) {
+  return gastosReales.value[`${presupuesto.id_categoria}-${presupuesto.mes}-${presupuesto.anio}`]
+    || { gasto_actual: 0, porcentaje_usado: 0 }
+}
+
 function obtenerNombreCategoria(id) {
   return categorias.value.find(c => c.id === id)?.nombre || '-'
 }
@@ -482,21 +488,23 @@ function formatearFecha(fecha) {
 
 async function cargarGastosReales() {
   try {
-    const ahora = new Date()
-    const mes = filtros.value.mes || ahora.getMonth() + 1
-    const anio = filtros.value.anio || ahora.getFullYear()
-
-    const respuesta = await api.get('/dashboard/resumen', {
-      params: { mes, anio }
-    })
+    // Obtener combinaciones únicas de mes/anio de los presupuestos cargados
+    const combinaciones = [...new Map(
+      presupuestos.value.map(p => [`${p.mes}-${p.anio}`, { mes: p.mes, anio: p.anio }])
+    ).values()]
 
     const mapaGastos = {}
-    respuesta.data.resumen_presupuestos.forEach(p => {
-      mapaGastos[p.id_categoria] = {
-        gasto_actual: p.gasto_actual,
-        porcentaje_usado: p.porcentaje_usado
-      }
-    })
+
+    await Promise.all(combinaciones.map(async ({ mes, anio }) => {
+      const respuesta = await api.get('/dashboard/resumen', { params: { mes, anio } })
+      respuesta.data.resumen_presupuestos.forEach(p => {
+        mapaGastos[`${p.id_categoria}-${mes}-${anio}`] = {
+          gasto_actual: p.gasto_actual,
+          porcentaje_usado: p.porcentaje_usado
+        }
+      })
+    }))
+
     gastosReales.value = mapaGastos
   } catch {
     // Si falla no bloqueamos la vista
