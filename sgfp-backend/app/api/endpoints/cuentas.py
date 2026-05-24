@@ -61,6 +61,7 @@ def obtener_saldos_cuentas(
             "id": cuenta.id,
             "nombre": cuenta.nombre,
             "tipo": cuenta.tipo,
+            "moneda": cuenta.moneda,
             "saldo_inicial": cuenta.saldo_inicial,
             "total_ingresos": total_ingresos,
             "total_gastos": total_gastos,
@@ -176,6 +177,8 @@ def obtener_saldo_cuenta(
     return {
         "id_cuenta": cuenta.id,
         "nombre": cuenta.nombre,
+        "tipo": cuenta.tipo,
+        "moneda": cuenta.moneda,
         "saldo_inicial": cuenta.saldo_inicial,
         "total_ingresos": total_ingresos,
         "total_gastos": total_gastos,
