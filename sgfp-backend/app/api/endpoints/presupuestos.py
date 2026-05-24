@@ -1,23 +1,98 @@
-# Endpoints de presupuestos: CRUD completo
+# Endpoints de presupuestos: CRUD completo + gasto real calculado
 # Basado en: https://fastapi.tiangolo.com/tutorial/sql-databases/
 
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.endpoints.autenticacion import obtener_usuario_actual
 from app.db.sesion import obtener_sesion
 from app.esquemas.presupuesto import (
     PresupuestoActualizar,
+    PresupuestoConGasto,
     PresupuestoCrear,
     PresupuestoRespuesta
 )
+from app.modelos.categoria import Categoria
 from app.modelos.presupuesto import Presupuesto
+from app.modelos.transaccion import Transaccion
 from app.modelos.usuario import Usuario
 
 # Instancia del router para agrupar los endpoints de presupuestos
 enrutador = APIRouter()
+
+
+@enrutador.get(
+    "/con-gastos/",
+    response_model=List[PresupuestoConGasto],
+    summary="Listar presupuestos con gasto real calculado"
+)
+def listar_presupuestos_con_gastos(
+    mes: Optional[int] = Query(None, description="Filtrar por mes (1-12)"),
+    anio: Optional[int] = Query(None, description="Filtrar por año"),
+    sesion: Session = Depends(obtener_sesion),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual)
+):
+    """
+    Devuelve los presupuestos del usuario con el gasto real de cada categoría
+    calculado filtrando por el mes y año de cada presupuesto.
+    Evita múltiples llamadas al dashboard desde el frontend.
+    """
+    consulta = sesion.query(Presupuesto).filter(
+        Presupuesto.id_usuario == usuario_actual.id
+    )
+
+    if mes:
+        consulta = consulta.filter(Presupuesto.mes == mes)
+    if anio:
+        consulta = consulta.filter(Presupuesto.anio == anio)
+
+    presupuestos = consulta.order_by(
+        Presupuesto.anio.desc(),
+        Presupuesto.mes.desc()
+    ).all()
+
+    # Carga todas las categorías necesarias en una sola query para evitar N+1
+    ids_categoria = [p.id_categoria for p in presupuestos]
+    categorias = {
+        c.id: c.nombre
+        for c in sesion.query(Categoria).filter(Categoria.id.in_(ids_categoria)).all()
+    }
+
+    resultado = []
+    for presupuesto in presupuestos:
+        # Gasto real filtrado por categoría, mes y año del presupuesto
+        gasto_actual = sesion.query(
+            func.coalesce(func.sum(Transaccion.importe), 0.0)
+        ).filter(
+            Transaccion.id_usuario == usuario_actual.id,
+            Transaccion.id_categoria == presupuesto.id_categoria,
+            Transaccion.tipo == "gasto",
+            func.extract("month", Transaccion.fecha) == presupuesto.mes,
+            func.extract("year", Transaccion.fecha) == presupuesto.anio
+        ).scalar() or 0.0
+
+        porcentaje_usado = round(
+            (gasto_actual / presupuesto.importe_limite * 100)
+            if presupuesto.importe_limite > 0 else 0.0,
+            2
+        )
+
+        resultado.append(PresupuestoConGasto(
+            id=presupuesto.id,
+            id_usuario=presupuesto.id_usuario,
+            id_categoria=presupuesto.id_categoria,
+            importe_limite=presupuesto.importe_limite,
+            mes=presupuesto.mes,
+            anio=presupuesto.anio,
+            nombre_categoria=categorias.get(presupuesto.id_categoria, "Sin categoría"),
+            gasto_actual=gasto_actual,
+            porcentaje_usado=porcentaje_usado
+        ))
+
+    return resultado
 
 
 @enrutador.get(
@@ -40,7 +115,6 @@ def listar_presupuestos(
         Presupuesto.id_usuario == usuario_actual.id
     )
 
-    # Aplica filtros opcionales
     if mes:
         consulta = consulta.filter(Presupuesto.mes == mes)
     if anio:
@@ -67,7 +141,6 @@ def crear_presupuesto(
     Verifica que no exista ya un presupuesto para la misma
     categoría, mes y año del usuario autenticado.
     """
-    # Comprueba si ya existe un presupuesto para esa categoría y mes
     presupuesto_existente = sesion.query(Presupuesto).filter(
         Presupuesto.id_usuario == usuario_actual.id,
         Presupuesto.id_categoria == datos.id_categoria,
@@ -146,7 +219,6 @@ def actualizar_presupuesto(
             detail="Presupuesto no encontrado"
         )
 
-    # Actualiza solo los campos enviados en la petición
     datos_actualizados = datos.model_dump(exclude_unset=True)
     for campo, valor in datos_actualizados.items():
         setattr(presupuesto, campo, valor)

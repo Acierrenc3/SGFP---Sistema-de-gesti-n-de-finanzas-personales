@@ -41,5 +41,15 @@ class PresupuestoRespuesta(PresupuestoBase):
     id_usuario: int
 
     class Config:
-        # Permite que Pydantic lea los datos desde atributos ORM
         from_attributes = True
+
+
+class PresupuestoConGasto(PresupuestoRespuesta):
+    """
+    Esquema extendido que incluye el gasto real calculado del período,
+    el porcentaje usado respecto al límite y el nombre de la categoría.
+    Usado por el endpoint /presupuestos/con-gastos/.
+    """
+    nombre_categoria: str
+    gasto_actual: float
+    porcentaje_usado: float

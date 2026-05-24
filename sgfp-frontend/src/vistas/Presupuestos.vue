@@ -66,7 +66,7 @@
           <!-- Cabecera tarjeta -->
           <div class="flex items-center justify-between mb-4">
             <div>
-              <p class="texto-glass font-medium text-sm">{{ obtenerNombreCategoria(presupuesto.id_categoria) }}</p>
+              <p class="texto-glass font-medium text-sm">{{ presupuesto.nombre_categoria }}</p>
               <p class="texto-glass-suave text-xs mt-0.5">
                 {{ obtenerNombreMes(presupuesto.mes) }} {{ presupuesto.anio }}
               </p>
@@ -99,10 +99,10 @@
             <div
               class="h-1.5 rounded-full animar-progreso"
               :style="{
-                width: `${Math.min(obtenerGasto(presupuesto).porcentaje_usado, 100)}%`,
-                background: obtenerGasto(presupuesto).porcentaje_usado >= 100
+                width: `${Math.min(presupuesto.porcentaje_usado, 100)}%`,
+                background: presupuesto.porcentaje_usado >= 100
                   ? 'linear-gradient(90deg, #ef4444, #dc2626)'
-                  : obtenerGasto(presupuesto).porcentaje_usado >= 80
+                  : presupuesto.porcentaje_usado >= 80
                   ? 'linear-gradient(90deg, #f59e0b, #d97706)'
                   : 'linear-gradient(90deg, #7c3aed, #00b4d8)'
               }"
@@ -110,17 +110,17 @@
           </div>
           <div class="flex justify-between mt-1">
             <p class="texto-glass-suave text-xs">
-              {{ formatearMoneda(obtenerGasto(presupuesto).gasto_actual) }} gastado
+              {{ formatearMoneda(presupuesto.gasto_actual) }} gastado
             </p>
             <p
               class="text-xs font-medium"
-              :style="obtenerGasto(presupuesto).porcentaje_usado >= 100
+              :style="presupuesto.porcentaje_usado >= 100
                 ? 'color: #f87171'
-                : obtenerGasto(presupuesto).porcentaje_usado >= 80
+                : presupuesto.porcentaje_usado >= 80
                 ? 'color: #fbbf24'
                 : 'color: rgba(255,255,255,0.5)'"
             >
-              {{ obtenerGasto(presupuesto).porcentaje_usado.toFixed(1) }}%
+              {{ presupuesto.porcentaje_usado.toFixed(1) }}%
             </p>
           </div>
 
@@ -421,7 +421,6 @@ const dialogoEliminarVisible = ref(false)
 const presupuestoEditando = ref(null)
 const presupuestoEliminar = ref(null)
 const errores = ref({})
-const gastosReales = ref({})
 
 // Desglose
 const desgloseVisible = ref(false)
@@ -461,16 +460,6 @@ const formulario = ref({
 
 const filtros = ref({ mes: '', anio: '' })
 
-// Devuelve el gasto real del presupuesto usando clave única id_categoria-mes-anio
-function obtenerGasto(presupuesto) {
-  return gastosReales.value[`${presupuesto.id_categoria}-${presupuesto.mes}-${presupuesto.anio}`]
-    || { gasto_actual: 0, porcentaje_usado: 0 }
-}
-
-function obtenerNombreCategoria(id) {
-  return categorias.value.find(c => c.id === id)?.nombre || '-'
-}
-
 function obtenerNombreMes(numero) {
   return meses.find(m => m.valor === numero)?.etiqueta || '-'
 }
@@ -486,40 +475,15 @@ function formatearFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-ES')
 }
 
-async function cargarGastosReales() {
-  try {
-    // Obtener combinaciones únicas de mes/anio de los presupuestos cargados
-    const combinaciones = [...new Map(
-      presupuestos.value.map(p => [`${p.mes}-${p.anio}`, { mes: p.mes, anio: p.anio }])
-    ).values()]
-
-    const mapaGastos = {}
-
-    await Promise.all(combinaciones.map(async ({ mes, anio }) => {
-      const respuesta = await api.get('/dashboard/resumen', { params: { mes, anio } })
-      respuesta.data.resumen_presupuestos.forEach(p => {
-        mapaGastos[`${p.id_categoria}-${mes}-${anio}`] = {
-          gasto_actual: p.gasto_actual,
-          porcentaje_usado: p.porcentaje_usado
-        }
-      })
-    }))
-
-    gastosReales.value = mapaGastos
-  } catch {
-    // Si falla no bloqueamos la vista
-  }
-}
-
 async function cargarPresupuestos() {
   cargando.value = true
   try {
     const params = {}
     if (filtros.value.mes) params.mes = filtros.value.mes
     if (filtros.value.anio) params.anio = filtros.value.anio
-    const respuesta = await api.get('/presupuestos/', { params })
+    // Endpoint dedicado: devuelve gasto_actual, porcentaje_usado y nombre_categoria en una sola llamada
+    const respuesta = await api.get('/presupuestos/con-gastos/', { params })
     presupuestos.value = respuesta.data
-    await cargarGastosReales()
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los presupuestos', life: 3000 })
   } finally {
@@ -533,10 +497,7 @@ async function cargarCategorias() {
 }
 
 async function abrirDesglose(presupuesto) {
-  presupuestoDesglose.value = {
-    ...presupuesto,
-    nombre_categoria: obtenerNombreCategoria(presupuesto.id_categoria)
-  }
+  presupuestoDesglose.value = { ...presupuesto }
   desgloseVisible.value = true
   cargandoDesglose.value = true
   transaccionesDesglose.value = []
